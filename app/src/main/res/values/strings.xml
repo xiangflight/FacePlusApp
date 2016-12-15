@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">FacePlusApp</string>
+    <string name="back_off">back off</string>
+    <string name="face_detect_system">Face Detect System</string>
+    <string name="add_new_face">Add New Face</string>
+    <string name="detect_in_real_time">Real-Time Detection</string>
 </resources>

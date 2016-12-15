@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">@color/color_white</color>
+    <color name="colorPrimaryDark">@color/color_white</color>
+    <color name="colorAccent">@color/color_white</color>
+
+    <!-- Base color -->
+    <color name="color_white">#FFFFFF</color>
+    <color name="base_theme_color">#FF56B9B0</color>
+    <color name="base_btn_color_default">#FFD5D5D5</color>
+    <color name="base_btn_color_active">#7b7575</color>
 </resources>

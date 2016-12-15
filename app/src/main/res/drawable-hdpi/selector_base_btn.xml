@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <!-- 设置圆角半径 -->
+            <corners
+                android:radius="@dimen/dp_4">
+            </corners>
+            <solid
+                android:color="@color/base_btn_color_default">
+            </solid>
+            <size
+                android:width="@dimen/dp_200"
+                android:height="@dimen/dp_200">
+            </size>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <!-- 设置圆角半径 -->
+            <corners
+                android:radius="@dimen/dp_4">
+            </corners>
+            <solid
+                android:color="@color/base_btn_color_default">
+            </solid>
+            <size
+                android:width="@dimen/dp_200"
+                android:height="@dimen/dp_200">
+            </size>
+        </shape>
+    </item>
+</selector>
