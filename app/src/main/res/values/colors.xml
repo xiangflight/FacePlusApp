@@ -6,7 +6,9 @@
 
     <!-- Base color -->
     <color name="color_white">#FFFFFF</color>
+    <color name="color_red">#FFFF0000</color>
     <color name="base_theme_color">#FF56B9B0</color>
     <color name="base_btn_color_default">#FFD5D5D5</color>
     <color name="base_btn_color_active">#7b7575</color>
+    <color name="base_et_color_background">#E9E9E9</color>
 </resources>

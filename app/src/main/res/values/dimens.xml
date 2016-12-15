@@ -31,6 +31,7 @@
     <dimen name="dp_48">48dp</dimen>
     <dimen name="dp_82">82dp</dimen>
     <dimen name="dp_100">100dp</dimen>
+    <dimen name="dp_160">160dp</dimen>
     <dimen name="dp_200">200dp</dimen>
 
     <!-- sp range -->
@@ -41,7 +42,8 @@
     <dimen name="sp_8">8sp</dimen>
     <dimen name="sp_10">10sp</dimen>
     <dimen name="sp_12">12sp</dimen>
-
+    <dimen name="sp_14">14sp</dimen>
+    <dimen name="sp_16">16sp</dimen>
     <dimen name="sp_18">18sp</dimen>
     <dimen name="sp_20">20sp</dimen>
     <dimen name="sp_22">22sp</dimen>

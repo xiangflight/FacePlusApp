@@ -4,4 +4,8 @@
     <string name="face_detect_system">人脸识别系统</string>
     <string name="add_new_face">添加新头像</string>
     <string name="detect_in_real_time">实时检测</string>
+    <string name="et_hint_in_add_new_face">输入头像姓名</string>
+    <string name="et_hint_warning">*必须输入姓名</string>
+    <string name="image_add_by_camera">从相机获取</string>
+    <string name="image_add_by_folder">从本地文件获取</string>
 </resources>

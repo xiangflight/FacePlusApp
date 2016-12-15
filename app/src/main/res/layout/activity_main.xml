@@ -37,6 +37,7 @@
                 android:layout_centerInParent="true"
                 android:drawableStart="@drawable/ic_play_arrow"
                 android:paddingStart="@dimen/dp_82"
+                android:paddingEnd="@dimen/dp_82"
                 />
             
             <TextView
@@ -66,6 +67,7 @@
                 android:layout_centerInParent="true"
                 android:drawableStart="@drawable/ic_play_arrow"
                 android:paddingStart="@dimen/dp_82"
+                android:paddingEnd="@dimen/dp_82"
                 />
 
             <TextView
