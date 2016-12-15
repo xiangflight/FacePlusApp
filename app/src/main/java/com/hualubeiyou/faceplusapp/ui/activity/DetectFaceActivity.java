@@ -20,7 +20,6 @@ public class DetectFaceActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        ActivityStackManager.getInstance().showAllActivities();
     }
 
     @Override

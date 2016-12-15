@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void bindViewsAndListeners() {
-        ActivityStackManager.getInstance().showAllActivities();
         Button mBtnBaseOne = (Button) findViewById(R.id.btn_base_one);
         Button mBtnBaseTwo = (Button) findViewById(R.id.btn_base_two);
         setListeners(mBtnBaseOne, mBtnBaseTwo);

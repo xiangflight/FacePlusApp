@@ -3,6 +3,11 @@
     package="com.hualubeiyou.faceplusapp"
     android:installLocation="auto">
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-feature android:name="android.hardware.camera"
+        android:required="true" />
+
+
     <application
         android:name=".application.FacePlusAppApplication"
         android:allowBackup="true"
@@ -22,6 +27,17 @@
             android:screenOrientation="landscape"/>
         <activity android:name=".ui.activity.DetectFaceActivity"
             android:screenOrientation="landscape"/>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.hualubeiyou.android.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+
     </application>
 
 </manifest>
