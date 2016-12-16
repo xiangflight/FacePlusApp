@@ -1,13 +1,22 @@
 package com.hualubeiyou.faceplusapp.ui.activity;
 
+import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,6 +34,9 @@ import com.hualubeiyou.faceplusapp.utils.Constants;
 import com.hualubeiyou.faceplusapp.utils.LogUtil;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,6 +45,16 @@ import java.util.Locale;
 public class AddNewFaceActivity extends AppCompatActivity {
 
     private static final int CODE_CAMERA_REQUEST_SRC = 1;
+
+    private static final int CODE_PICTURES_REQUEST_SRC = 2;
+
+    private static final int REQUEST_FOR_OPEN_CAMERA_AND_WRITE_EXTERNAL = 3;
+
+    private static final int REQUEST_FOR_COPY_LOCAL_FILE = 4;
+
+    private static final int UP_LIMIT_FILES = 10;
+
+    private static final String authority = "com.hualubeiyou.android.fileprovider";
 
     private Button mBtnUpload;
     private EditText mEtInputName;
@@ -69,7 +91,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!TextUtils.isEmpty(mEtInputName.getText())) {
-                    getPhotoByCamera();
+                    openCamera();
                 } else {
                     Toast.makeText(AddNewFaceActivity.this,
                             R.string.please_input_name_first, Toast.LENGTH_SHORT).show();
@@ -80,13 +102,53 @@ public class AddNewFaceActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!TextUtils.isEmpty(mEtInputName.getText())) {
-                    getPhotoFromFolder();
+                    openLocalFolder();
                 } else {
                     Toast.makeText(AddNewFaceActivity.this,
                             R.string.please_input_name_first, Toast.LENGTH_SHORT).show();
                 }
             }
         });
+    }
+
+    private void openCamera() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            getPhotoByCamera();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_FOR_OPEN_CAMERA_AND_WRITE_EXTERNAL);
+        }
+    }
+
+    private void openLocalFolder() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            getPhotoFromFolder();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_FOR_COPY_LOCAL_FILE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_FOR_OPEN_CAMERA_AND_WRITE_EXTERNAL) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                getPhotoByCamera();
+            } else {
+                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQUEST_FOR_COPY_LOCAL_FILE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getPhotoFromFolder();
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     private void getPhotoByCamera() {
@@ -104,7 +166,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
             if (photoFile != null) {
                 Uri photoURI;
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                    photoURI = FileProvider.getUriForFile(this, "com.hualubeiyou.android.fileprovider", photoFile);
+                    photoURI = FileProvider.getUriForFile(this, authority, photoFile);
                 } else {
                     photoURI = Uri.fromFile(photoFile);
                 }
@@ -115,7 +177,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     private void getPhotoFromFolder() {
-
+        Intent getLocalPictures = new Intent();
+        getLocalPictures.setType("image/*");
+        getLocalPictures.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(getLocalPictures, CODE_PICTURES_REQUEST_SRC);
     }
 
     @Override
@@ -124,27 +189,68 @@ public class AddNewFaceActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == CODE_CAMERA_REQUEST_SRC) {
                 galleryAddPic();
-                mBtnUpload.setVisibility(View.VISIBLE);
-                mTvPortraitName.setVisibility(View.VISIBLE);
-                mTvPortraitName.setText(mEtInputName.getText());
                 showOriginalImage();
+            } else if (requestCode == CODE_PICTURES_REQUEST_SRC) {
+                showLocalImage(data);
             }
+            mBtnUpload.setVisibility(View.VISIBLE);
+            mTvPortraitName.setVisibility(View.VISIBLE);
+            mTvPortraitName.setText(mEtInputName.getText());
         }
     }
 
-    private void showOriginalImage() {
-        int targetW = mIvPicture.getWidth();
-        int targetH = mIvPicture.getHeight();
+    private Bitmap getScaledImage(String filePath, ImageView imageView) {
+        int targetW = imageView.getWidth();
+        int targetH = imageView.getHeight();
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        BitmapFactory.decodeFile(filePath, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
-        Bitmap portraitBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        return BitmapFactory.decodeFile(filePath, bmOptions);
+    }
+
+    private void showOriginalImage() {
+        Bitmap portraitBitmap = getScaledImage(mCurrentPhotoPath, mIvPicture);
         mIvPicture.setImageBitmap(portraitBitmap);
+    }
+
+    private void showLocalImage(Intent data) {
+        Uri uri = data.getData();
+        ContentResolver cr = this.getContentResolver();
+        Bitmap bitmap = null;
+        try {
+            bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        mIvPicture.setImageBitmap(bitmap);
+        // 新创建一个文件，写入该uri对应的文件内容，是一个I/O操作，放在AsyncTask里写
+        CopiedFileTask mCopyTask = new CopiedFileTask();
+        mCopyTask.execute(uri);
+    }
+
+    private class CopiedFileTask extends AsyncTask<Uri, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Uri... uris) {
+            File copiedFile;
+            String destPath = null;
+            try {
+                copiedFile = createImageFile();
+                destPath = copiedFile.getAbsolutePath();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String srcPath = getRealPathFromUri_AboveApi19(AddNewFaceActivity.this, uris[0]);
+            if(copyFile(srcPath, destPath)) {
+                LogUtil.d(Constants.TAG_APPLICATION, "copy successfully");
+            }
+            return null;
+        }
     }
 
     public void uploadImage(View view) {
@@ -168,6 +274,11 @@ public class AddNewFaceActivity extends AppCompatActivity {
         LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + imageFileName);
         // private storage
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (storageDir != null && storageDir.listFiles().length >= UP_LIMIT_FILES) {
+            for (File file : storageDir.listFiles()) {
+                file.deleteOnExit();
+            }
+        }
         File image = File.createTempFile(
                 imageFileName, /* prefix */
                 ".jpg",        /* suffix */
@@ -186,4 +297,57 @@ public class AddNewFaceActivity extends AppCompatActivity {
         mediaScanIntent.setData(portraitUri);
         this.sendBroadcast(mediaScanIntent);
     }
+
+    /**
+     * 适配api19以上,根据uri获取图片的绝对路径
+     */
+    private static String getRealPathFromUri_AboveApi19(Context context, Uri uri) {
+        String filePath = null;
+        String wholeID = DocumentsContract.getDocumentId(uri);
+
+        // 使用':'分割
+        String id = wholeID.split(":")[1];
+
+        String[] projection = {MediaStore.Images.Media.DATA};
+        String selection = MediaStore.Images.Media._ID + "=?";
+        String[] selectionArgs = {id};
+
+        Cursor cursor = context.getContentResolver().query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
+                selection, selectionArgs, null);
+        int columnIndex;
+        if (cursor != null) {
+            columnIndex = cursor.getColumnIndex(projection[0]);
+            if (cursor.moveToFirst()) {
+                filePath = cursor.getString(columnIndex);
+            }
+            cursor.close();
+        }
+        return filePath;
+    }
+
+    /**
+     * 复制单个文件
+     * @param srcPath String 原文件路径
+     * @param destPath String 复制后路径
+     * @return boolean
+     */
+    public boolean copyFile(String srcPath, String destPath) {
+        try {
+            int byteRead;
+            FileInputStream fis = new FileInputStream(srcPath); //读入原文件
+            FileOutputStream fos = new FileOutputStream(destPath); //写入新文件
+            byte[] buffer = new byte[1444];
+            while ( (byteRead = fis.read(buffer)) != -1) {
+                fos.write(buffer, 0, byteRead);
+            }
+            fis.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            LogUtil.d(Constants.TAG_APPLICATION, "copy error");
+            return false;
+        }
+    }
+
 }

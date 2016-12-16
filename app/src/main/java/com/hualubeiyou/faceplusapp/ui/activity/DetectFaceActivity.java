@@ -29,6 +29,7 @@ public class DetectFaceActivity extends AppCompatActivity implements SurfaceHold
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detect_face);
         ActivityStackManager.getInstance().pushActivity(this);
+
         initView();
         mHolder = mPreview.getHolder();
         mHolder.addCallback(this);
