@@ -6,8 +6,10 @@ package com.hualubeiyou.faceplusapp.utils;
 
 public class Constants {
 
-    static final String TAG_APPLICATION = "faceplusapp";
+    public static final String TAG_APPLICATION = "faceplusapp";
 
     static final boolean TAG_VERSION_DEBUG = true;
+
+    static final String FILE_NAME_SUFFIX_FORMAT="yyyyMMdd";
 
 }

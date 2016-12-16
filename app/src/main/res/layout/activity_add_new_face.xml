@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/shape_base_et"
         android:layout_centerVertical="true"
-        android:layout_marginStart="@dimen/dp_200"
+        android:layout_marginStart="@dimen/dp_100"
         android:hint="@string/et_hint_in_add_new_face"
         android:textCursorDrawable="@color/base_theme_color"
         android:textSize="@dimen/sp_16"
@@ -63,10 +63,48 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/image_add_by_folder"
         android:src="@drawable/ic_folder_open"
-        android:layout_alignBottom="@id/et_input_name"
-        android:layout_toEndOf="@id/iv_camera"
-        android:layout_marginStart="@dimen/dp_82"
+        android:layout_marginStart="42dp"
         android:padding="@dimen/dp_6"
+        android:layout_alignTop="@+id/iv_camera"
+        android:layout_toEndOf="@+id/iv_camera" />
+
+    <ImageView
+        android:id="@+id/iv_show"
+        android:layout_width="@dimen/dp_384"
+        android:layout_height="@dimen/dp_240"
+        android:contentDescription="@string/image_show"
+        android:layout_toEndOf="@id/iv_folder"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_centerVertical="true"/>
+
+    <TextView
+        android:id="@+id/tv_portrait_name"
+        android:layout_above="@id/iv_show"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/portrait_name"
+        android:textColor="@color/base_theme_color"
+        android:textSize="@dimen/sp_20"
+        android:textStyle="bold"
+        android:layout_alignStart="@id/iv_show"
+        android:layout_marginStart="@dimen/dp_160"
+        android:layout_marginBottom="@dimen/dp_6"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/btn_upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/iv_show"
+        android:layout_alignStart="@id/iv_show"
+        android:layout_marginStart="@dimen/dp_140"
+        android:layout_marginTop="@dimen/dp_6"
+        android:text="@string/upload_image"
+        android:textStyle="bold"
+        android:textSize="@dimen/sp_20"
+        android:textColor="@color/base_theme_color"
+        android:onClick="uploadImage"
+        android:visibility="gone"
         />
 
 

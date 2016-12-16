@@ -9,4 +9,7 @@
     <string name="image_add_by_camera">从相机获取</string>
     <string name="image_add_by_folder">从本地文件获取</string>
     <string name="please_input_name_first">请先输入姓名</string>
+    <string name="image_show">展示照片</string>
+    <string name="portrait_name">头像姓名</string>
+    <string name="upload_image">上传</string>
 </resources>
