@@ -32,6 +32,8 @@ import com.hualubeiyou.faceplusapp.R;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
 import com.hualubeiyou.faceplusapp.utils.Constants;
 import com.hualubeiyou.faceplusapp.utils.LogUtil;
+import com.hualubeiyou.faceplusapp.utils.NetworkUtil;
+import com.hualubeiyou.faceplusapp.utils.PreferenceUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,6 +43,13 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class AddNewFaceActivity extends AppCompatActivity {
 
@@ -254,7 +263,51 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     public void uploadImage(View view) {
-        // TODO: 2016/12/16 upload image
+        if (NetworkUtil.isConnected(this)) {
+            upLoadImage();
+        } else {
+            Toast.makeText(this, "需要连接网络", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void upLoadImage() {
+        if (!PreferenceUtil.getInstance().getValue(Constants.OUT_ID_KEY)
+                .equals(Constants.OUT_ID_TEST)) {
+            createFaceSet();
+        }
+        realUpLoadImage();
+    }
+
+    /**
+     * should only create once.
+     */
+    private void createFaceSet() {
+        LogUtil.i(Constants.TAG_APPLICATION, "create a new FaceSet id");
+        OkHttpClient client = new OkHttpClient();
+        FormBody.Builder formBodyBuild = new FormBody.Builder();
+        formBodyBuild.add(Constants.PARAMETER_API_KEY, Constants.API_KEY_APPLICATION);
+        formBodyBuild.add(Constants.PARAMETER_API_SECRET, Constants.API_SECRET_APPLICATION);
+        formBodyBuild.add(Constants.PARAMETER_OUTER_ID, Constants.OUT_ID_TEST);
+        Request mRequest = new Request.Builder()
+                .url(Constants.URL_FACESET_CREATE)
+                .post(formBodyBuild.build())
+                .build();
+        Call mCall = client.newCall(mRequest);
+        mCall.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                LogUtil.e(Constants.TAG_APPLICATION, e.toString());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                LogUtil.i(Constants.TAG_APPLICATION, response.body().string());
+            }
+        });
+    }
+
+    private void realUpLoadImage() {
+        // TODO: 2016/12/19
     }
 
     @Override
@@ -269,7 +322,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     private File createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd", Locale.CHINA).format(new Date());
+        String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
         String imageFileName = timeStamp + "_" + mEtInputName.getText() + "_";
         LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + imageFileName);
         // private storage

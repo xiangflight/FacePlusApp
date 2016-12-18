@@ -3,6 +3,7 @@ package com.hualubeiyou.faceplusapp.application;
 import android.app.Application;
 
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
+import com.hualubeiyou.faceplusapp.utils.PreferenceUtil;
 
 /**
  * Created by flight on 2016/12/15
@@ -14,5 +15,6 @@ public class FacePlusAppApplication extends Application {
     public void onCreate() {
         super.onCreate();
         ActivityStackManager.getInstance().init();
+        PreferenceUtil.getInstance().init(this);
     }
 }
