@@ -5,14 +5,12 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -31,9 +29,14 @@ import android.widget.Toast;
 import com.hualubeiyou.faceplusapp.R;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
 import com.hualubeiyou.faceplusapp.utils.Constants;
+import com.hualubeiyou.faceplusapp.utils.FileUtil;
 import com.hualubeiyou.faceplusapp.utils.LogUtil;
 import com.hualubeiyou.faceplusapp.utils.NetworkUtil;
 import com.hualubeiyou.faceplusapp.utils.PreferenceUtil;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,8 +50,11 @@ import java.util.Locale;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class AddNewFaceActivity extends AppCompatActivity {
@@ -70,7 +76,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
     private ImageView mIvPicture;
     private TextView mTvPortraitName;
 
+    // 当前需要上传的文件路径
+    private String mCurrentPhotoName;
     private String mCurrentPhotoPath;
+    private String mFaceToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -254,7 +263,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            String srcPath = getRealPathFromUri_AboveApi19(AddNewFaceActivity.this, uris[0]);
+            String srcPath = FileUtil.getRealPathFromUri_AboveApi19(AddNewFaceActivity.this, uris[0]);
             if(copyFile(srcPath, destPath)) {
                 LogUtil.d(Constants.TAG_APPLICATION, "copy successfully");
             }
@@ -271,8 +280,8 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     private void upLoadImage() {
-        if (!PreferenceUtil.getInstance().getValue(Constants.OUT_ID_KEY)
-                .equals(Constants.OUT_ID_TEST)) {
+        if (!PreferenceUtil.getInstance().getValue(Constants.OUTER_ID_KEY)
+                .equals(Constants.OUTER_ID_TEST)) {
             createFaceSet();
         }
         realUpLoadImage();
@@ -287,27 +296,169 @@ public class AddNewFaceActivity extends AppCompatActivity {
         FormBody.Builder formBodyBuild = new FormBody.Builder();
         formBodyBuild.add(Constants.PARAMETER_API_KEY, Constants.API_KEY_APPLICATION);
         formBodyBuild.add(Constants.PARAMETER_API_SECRET, Constants.API_SECRET_APPLICATION);
-        formBodyBuild.add(Constants.PARAMETER_OUTER_ID, Constants.OUT_ID_TEST);
-        Request mRequest = new Request.Builder()
+        formBodyBuild.add(Constants.PARAMETER_OUTER_ID, Constants.OUTER_ID_TEST);
+        Request request = new Request.Builder()
                 .url(Constants.URL_FACESET_CREATE)
                 .post(formBodyBuild.build())
                 .build();
-        Call mCall = client.newCall(mRequest);
+        Call mCall = client.newCall(request);
         mCall.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 LogUtil.e(Constants.TAG_APPLICATION, e.toString());
+                showUIToast("create FaceSet failure");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 LogUtil.i(Constants.TAG_APPLICATION, response.body().string());
+                if (!response.isSuccessful()) {
+                    showUIToast("create FaceSet failure");
+                } else {
+                    PreferenceUtil
+                            .getInstance().setValue(Constants.OUTER_ID_KEY, Constants.OUTER_ID_TEST);
+                }
+
             }
         });
     }
 
     private void realUpLoadImage() {
-        // TODO: 2016/12/19
+        detectFace();
+    }
+
+    /**
+     * 检测人脸
+     */
+    private void detectFace() {
+        File detectFile = new File(mCurrentPhotoPath);
+        OkHttpClient client = new OkHttpClient();
+        try {
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart(Constants.PARAMETER_IMAGE_FILE, detectFile.getName(), RequestBody.create(MediaType.parse("image/jpg"), detectFile))
+                    .addFormDataPart(Constants.PARAMETER_API_KEY, Constants.API_KEY_APPLICATION)
+                    .addFormDataPart(Constants.PARAMETER_API_SECRET, Constants.API_SECRET_APPLICATION)
+                    .build();
+            Request request = new Request.Builder()
+                    .url(Constants.URL_FACE_DETECT)
+                    .post(requestBody)
+                    .build();
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    LogUtil.e(Constants.TAG_APPLICATION, e.toString());
+                    showUIToast("检测人脸失败");
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String localResponse = response.body().string();
+                    LogUtil.i(Constants.TAG_APPLICATION, localResponse);
+                    if (!response.isSuccessful()) {
+                        showUIToast("检测人脸失败");
+                    } else {
+                        try {
+                            JSONObject result = new JSONObject(localResponse);
+                            JSONArray facesArray = result.getJSONArray(Constants.VALUE_RETURN_FACES);
+                            if (facesArray.length() != 0) {
+                                mFaceToken = facesArray.getJSONObject(0)
+                                        .getString(Constants.VALUE_RETURN_FACE_TOKEN);
+                                LogUtil.i(Constants.TAG_APPLICATION, "face token is " + mFaceToken);
+                                setFaceUserId();
+                            } else {
+                                showUIToast("没有人脸");
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setFaceUserId() {
+        OkHttpClient client = new OkHttpClient();
+        String userId = mCurrentPhotoName.split("_")[1];
+        FormBody.Builder formBodyBuilder = new FormBody.Builder();
+        formBodyBuilder.add(Constants.PARAMETER_API_KEY, Constants.API_KEY_APPLICATION);
+        formBodyBuilder.add(Constants.PARAMETER_API_SECRET, Constants.API_SECRET_APPLICATION);
+        formBodyBuilder.add(Constants.VALUE_RETURN_FACE_TOKEN, mFaceToken);
+        formBodyBuilder.add(Constants.PARAMETER_USER_ID, userId);
+        final Request request = new Request.Builder()
+                .url(Constants.URL_FACE_SETUSERID)
+                .post(formBodyBuilder.build())
+                .build();
+        Call call = client.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                LogUtil.e(Constants.TAG_APPLICATION, e.toString());
+                showUIToast("设置人脸身份失败");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    showUIToast("检测人脸失败");
+                } else {
+                    LogUtil.i(Constants.TAG_APPLICATION, response.body().string());
+                    addFaceToFaceSet();
+                }
+            }
+        });
+    }
+
+    /**
+     * 添加人脸到faceSet中
+     */
+    private void addFaceToFaceSet() {
+        OkHttpClient client = new OkHttpClient();
+        FormBody formBody = new FormBody.Builder()
+                .add(Constants.PARAMETER_API_KEY, Constants.API_KEY_APPLICATION)
+                .add(Constants.PARAMETER_API_SECRET, Constants.API_SECRET_APPLICATION)
+                .add(Constants.PARAMETER_OUTER_ID, Constants.OUTER_ID_TEST)
+                .add(Constants.PARAMETER_FACE_TOKENS, mFaceToken)
+                .build();
+        Request request = new Request.Builder()
+                .url(Constants.URL_FACESET_ADDFACE)
+                .post(formBody)
+                .build();
+        Call call = client.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                LogUtil.e(Constants.TAG_APPLICATION, e.toString());
+                showUIToast("添加人脸失败");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String localResponse = response.body().string();
+                LogUtil.i(Constants.TAG_APPLICATION, localResponse);
+                if (!response.isSuccessful()) {
+                    showUIToast("添加人脸失败");
+                } else {
+                    showUIToast("添加人脸成功");
+                    try {
+                        JSONObject values = new JSONObject(localResponse);
+                        LogUtil.i(Constants.TAG_APPLICATION,
+                                "outer_id is " + values.getString(Constants.PARAMETER_OUTER_ID)
+                                + ";face_count is " + values.getInt(Constants.VALUE_RETURN_FACE_COUNT)
+                                + ";face_added is " + values.getInt(Constants.VALUE_RETURN_FACE_ADDED)
+                        );
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
     }
 
     @Override
@@ -323,8 +474,8 @@ public class AddNewFaceActivity extends AppCompatActivity {
 
     private File createImageFile() throws IOException {
         String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
-        String imageFileName = timeStamp + "_" + mEtInputName.getText() + "_";
-        LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + imageFileName);
+        mCurrentPhotoName = timeStamp + "_" + mEtInputName.getText() + "_";
+        LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + mCurrentPhotoName);
         // private storage
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         if (storageDir != null && storageDir.listFiles().length >= UP_LIMIT_FILES) {
@@ -333,7 +484,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
             }
         }
         File image = File.createTempFile(
-                imageFileName, /* prefix */
+                mCurrentPhotoName, /* prefix */
                 ".jpg",        /* suffix */
                 storageDir     /* directory */
         );
@@ -351,33 +502,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
         this.sendBroadcast(mediaScanIntent);
     }
 
-    /**
-     * 适配api19以上,根据uri获取图片的绝对路径
-     */
-    private static String getRealPathFromUri_AboveApi19(Context context, Uri uri) {
-        String filePath = null;
-        String wholeID = DocumentsContract.getDocumentId(uri);
 
-        // 使用':'分割
-        String id = wholeID.split(":")[1];
-
-        String[] projection = {MediaStore.Images.Media.DATA};
-        String selection = MediaStore.Images.Media._ID + "=?";
-        String[] selectionArgs = {id};
-
-        Cursor cursor = context.getContentResolver().query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
-                selection, selectionArgs, null);
-        int columnIndex;
-        if (cursor != null) {
-            columnIndex = cursor.getColumnIndex(projection[0]);
-            if (cursor.moveToFirst()) {
-                filePath = cursor.getString(columnIndex);
-            }
-            cursor.close();
-        }
-        return filePath;
-    }
 
     /**
      * 复制单个文件
@@ -401,6 +526,15 @@ public class AddNewFaceActivity extends AppCompatActivity {
             LogUtil.d(Constants.TAG_APPLICATION, "copy error");
             return false;
         }
+    }
+
+    private void showUIToast(final String msg) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(AddNewFaceActivity.this, msg, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
 }

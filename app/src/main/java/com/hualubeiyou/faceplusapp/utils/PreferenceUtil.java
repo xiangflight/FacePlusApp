@@ -11,7 +11,6 @@ import android.preference.PreferenceManager;
 public class PreferenceUtil {
 
     private SharedPreferences mSharedPreference;
-    private SharedPreferences.Editor mEditor;
 
     private PreferenceUtil(){}
 
@@ -28,9 +27,9 @@ public class PreferenceUtil {
     }
 
     public boolean setValue(String key, String value) {
-        mEditor = mSharedPreference.edit();
-        mEditor.putString(key, value);
-        return mEditor.commit();
+        SharedPreferences.Editor editor = mSharedPreference.edit();
+        editor.putString(key, value);
+        return editor.commit();
     }
 
     public String getValue(String key) {

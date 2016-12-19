@@ -16,9 +16,9 @@ public class Constants {
 
     public static final String API_SECRET_APPLICATION = "KRsi-np3o15OMftmG9kSFy3LiTAYWPiv";
 
-    public static final String OUT_ID_TEST = "OUTER_ID_DEVELOPMENT_test";
+    public static final String OUTER_ID_TEST = "OUTER_ID_DEVELOPMENT_1";
 
-    public static final String OUT_ID_KEY = "OUTER_ID_KEY";
+    public static final String OUTER_ID_KEY = "OUTER_ID_KEY";
 
     //----------------POST REQUEST----------------------------------------------------------
     // FaceSet Create API
@@ -26,5 +26,22 @@ public class Constants {
     public static final String PARAMETER_API_KEY = "api_key";
     public static final String PARAMETER_API_SECRET = "api_secret";
     public static final String PARAMETER_OUTER_ID = "outer_id";
+
+    // Detect API
+    public static final String URL_FACE_DETECT = "https://api-cn.faceplusplus.com/facepp/v3/detect";
+    public static final String PARAMETER_IMAGE_FILE = "image_file";
+    public static final String PARAMETER_RETURN_ATTRIBUTES = "return_attributes";
+    public static final String VALUE_RETURN_FACES = "faces";
+    public static final String VALUE_RETURN_FACE_TOKEN = "face_token";
+
+    // Face SetUserID API
+    public static final String URL_FACE_SETUSERID = "https://api-cn.faceplusplus.com/facepp/v3/face/setuserid";
+    public static final String PARAMETER_USER_ID = "user_id";
+
+    // FaceSet AddFace API
+    public static final String URL_FACESET_ADDFACE = "https://api-cn.faceplusplus.com/facepp/v3/faceset/addface";
+    public static final String PARAMETER_FACE_TOKENS = "face_tokens";
+    public static final String VALUE_RETURN_FACE_COUNT = "face_count";
+    public static final String VALUE_RETURN_FACE_ADDED = "face_added";
 
 }
