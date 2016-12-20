@@ -2,9 +2,14 @@ package com.hualubeiyou.faceplusapp.utils;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Created by flight on 2016/12/18
@@ -39,4 +44,19 @@ public class FileUtil {
         }
         return filePath;
     }
+
+    public static void bitmapToPicture(String fileName, Bitmap bitmap) {
+        try {
+            File file = new File("/sdcard/Note/" + fileName + ".png");
+            file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+        }
+    }
+
 }

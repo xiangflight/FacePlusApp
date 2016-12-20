@@ -12,11 +12,13 @@ public class Constants {
 
     public static final String FILE_NAME_SUFFIX_FORMAT="yyyyMMdd";
 
+    public static final int UP_LIMIT_FILES = 10;
+
     public static final String API_KEY_APPLICATION = "cziQie5URhJeCD_MsbsVyRNE0t2bCo6W";
 
     public static final String API_SECRET_APPLICATION = "KRsi-np3o15OMftmG9kSFy3LiTAYWPiv";
 
-    public static final String OUTER_ID_TEST = "OUTER_ID_DEVELOPMENT_1";
+    public static final String OUTER_ID_TEST = "OUTER_ID_DEVELOPMENT_3";
 
     public static final String OUTER_ID_KEY = "OUTER_ID_KEY";
 
@@ -43,5 +45,11 @@ public class Constants {
     public static final String PARAMETER_FACE_TOKENS = "face_tokens";
     public static final String VALUE_RETURN_FACE_COUNT = "face_count";
     public static final String VALUE_RETURN_FACE_ADDED = "face_added";
+
+    // Search API
+    public static final String URL_FACE_SEARCH = "https://api-cn.faceplusplus.com/facepp/v3/search";
+    public static final String VALUE_RETURN_RESULTS = "results";
+    public static final String PARAMTER_RESULT_COUNT = "return_result_count";
+    public static final String DEFAULT_RESULT_COUNT = "5";
 
 }

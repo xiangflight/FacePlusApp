@@ -2,27 +2,57 @@ package com.hualubeiyou.faceplusapp.ui.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
+import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.hualubeiyou.faceplusapp.R;
+import com.hualubeiyou.faceplusapp.ui.views.CameraPreview;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
+import com.hualubeiyou.faceplusapp.utils.Constants;
+import com.hualubeiyou.faceplusapp.utils.LogUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
-public class DetectFaceActivity extends AppCompatActivity implements SurfaceHolder.Callback{
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
+public class DetectFaceActivity extends AppCompatActivity implements Camera.PreviewCallback{
+
+    private CameraPreview mPreview;
     private Camera mCamera;
-    private SurfaceView mPreview;
-    private SurfaceHolder mHolder;
+    private TextView mUserName;
+
+    private FaceDetectTask mFaceDetectTask;
+
+    private static final int ID_FRONT_CAMERA = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,22 +60,32 @@ public class DetectFaceActivity extends AppCompatActivity implements SurfaceHold
         setContentView(R.layout.activity_detect_face);
         ActivityStackManager.getInstance().pushActivity(this);
 
+        // Create an instance of Camera in a separate thread not to bog down the UI thread.
+        mCamera = getFrontCamera(ID_FRONT_CAMERA);
         initView();
-        mHolder = mPreview.getHolder();
-        mHolder.addCallback(this);
     }
 
+    /** Create our Preview view and set it as the content of our activity */
     private void initView() {
-        mPreview = (SurfaceView) findViewById(R.id.sv_preview);
+        mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.setOnClickListener(onClickListener);
+        preview.addView(mPreview);
+        mUserName = (TextView) findViewById(R.id.tv_who_name);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (mCamera == null) {
-            mCamera = getCamera();
-            if (mHolder != null) {
-                setStartPreview(mCamera, mHolder);
+            mCamera = getFrontCamera(ID_FRONT_CAMERA);
+            if (mPreview.getHolder() != null) {
+                try {
+                    mCamera.setPreviewDisplay(mPreview.getHolder());
+                    mCamera.startPreview();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -53,7 +93,7 @@ public class DetectFaceActivity extends AppCompatActivity implements SurfaceHold
     @Override
     protected void onPause() {
         super.onPause();
-        releaseCamera();
+        releaseCameraAndPreview();
         ActivityStackManager.getInstance().popActivity(this);
     }
 
@@ -62,39 +102,19 @@ public class DetectFaceActivity extends AppCompatActivity implements SurfaceHold
         context.startActivity(intent);
     }
 
-    /**
-     * get camera
-     * @return a camera
-     */
-    private Camera getCamera() {
-        Camera camera;
+    /** A safe way to get an Instance of the Camera object. */
+    public static Camera getFrontCamera(int id) {
+        Camera c = null;
         try {
-            camera = Camera.open();
+            c = Camera.open(id); // attempt to get a front camera instance
         } catch (Exception e) {
-            camera = null;
-            e.printStackTrace();
+            // Front Camera is not available(int use or does not exist)
+            LogUtil.e(Constants.TAG_APPLICATION, "front camera in use or not exist");
         }
-        return camera;
+        return c;
     }
 
-    /**
-     * 开始预览相机内容
-     */
-    private void setStartPreview(Camera camera, SurfaceHolder holder) {
-        try {
-            camera.setPreviewDisplay(holder);
-            // 将系统相机预览角度进行调整
-            camera.setDisplayOrientation(0);
-            camera.startPreview();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 释放相机资源
-     */
-    private void releaseCamera() {
+    private void releaseCameraAndPreview() {
         if (mCamera != null) {
             mCamera.setPreviewCallback(null);
             mCamera.stopPreview();
@@ -103,50 +123,171 @@ public class DetectFaceActivity extends AppCompatActivity implements SurfaceHold
         }
     }
 
-    @Override
-    public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        setStartPreview(mCamera, surfaceHolder);
+    private File createPhoto() {
+        String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
+        String detectPhotoName = timeStamp + "_" + "_";
+        LogUtil.d(Constants.TAG_APPLICATION, "detectPhotoName name is " + detectPhotoName);
+        // private storage
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+            for (File file : storageDir.listFiles()) {
+                file.deleteOnExit();
+            }
+        }
+        File photo = null;
+        try {
+            photo = File.createTempFile(
+                    detectPhotoName, /* prefix */
+                    ".jpg",        /* suffix */
+                    storageDir     /* directory */
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return photo;
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
-        mCamera.stopPreview();
-        setStartPreview(mCamera, surfaceHolder);
+    public void onPreviewFrame(byte[] data, Camera camera) {
+        if (null != mFaceDetectTask) {
+            switch (mFaceDetectTask.getStatus()) {
+                case RUNNING:
+                    return;
+                case PENDING:
+                    mFaceDetectTask.cancel(false);
+                    break;
+            }
+        }
+        mFaceDetectTask = new FaceDetectTask(data);
+        mFaceDetectTask.execute();
     }
 
-    @Override
-    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-        releaseCamera();
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+        }
+    };
+
+//    private Camera.AutoFocusCallback autoFocusCallback = new Camera.AutoFocusCallback() {
+//        @Override
+//        public void onAutoFocus(boolean success, Camera camera) {
+//            if (success) {
+//                LogUtil.i(Constants.TAG_APPLICATION, "auto success");
+//                mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+//            } else {
+//                LogUtil.i(Constants.TAG_APPLICATION, "auto success");
+////                mCamera.autoFocus(autoFocusCallback);
+//            }
+//        }
+//    };
+
+    /** 自定义AsyncTask类转化文件并上传比对 */
+    private class FaceDetectTask extends AsyncTask<Void, Void, File> {
+
+        private byte[] mData;
+
+        private FaceDetectTask(byte[] data) {
+            this.mData = data;
+        }
+
+        @Override
+        protected File doInBackground(Void... params) {
+            Camera.Size size = mCamera.getParameters().getPreviewSize();
+            int width = size.width;
+            int height = size.height;
+            YuvImage image = new YuvImage(mData, ImageFormat.NV21, width, height, null);
+            ByteArrayOutputStream os = new ByteArrayOutputStream(mData.length);
+            if (!image.compressToJpeg(new Rect(0, 0, width, height), 100, os)) {
+                return null;
+            }
+            byte[] tmpData = os.toByteArray(); // JPEG二进制数据
+            Bitmap bmp = BitmapFactory.decodeByteArray(tmpData, 0, tmpData.length);
+//            doSomethingNeeded(bmp);
+            File file = createPhoto();
+            FileOutputStream fos;
+            try {
+                fos = new FileOutputStream(file);
+                fos.write(tmpData);
+                fos.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+            return file;
+        }
+
+        @Override
+        protected void onPostExecute(File file) {
+            searchFace(file);
+        }
     }
 
-    // back up
-    private void capture(View view) {
-        Camera.Parameters parameters = mCamera.getParameters();
-        parameters.setPictureFormat(ImageFormat.JPEG);
-        parameters.setPreviewSize(800, 400);
-        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-        mCamera.autoFocus(new Camera.AutoFocusCallback() {
-            @Override
-            public void onAutoFocus(boolean success, Camera camera) {
-                if (success) {
-                    mCamera.takePicture(null, null, new Camera.PictureCallback() {
-                        @Override
-                        public void onPictureTaken(byte[] data, Camera camera) {
-                            File tempFile = new File("/sdcard/temp.png");
-                            try {
-                                FileOutputStream fos = new FileOutputStream(tempFile);
-                                fos.write(data);
-                                fos.close();
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
+    private void searchFace(File file) {
+        OkHttpClient client = new OkHttpClient();
+        try {
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart(Constants.PARAMETER_IMAGE_FILE, file.getName(), RequestBody.create(MediaType.parse("image/jpg"), file))
+                    .addFormDataPart(Constants.PARAMETER_API_KEY, Constants.API_KEY_APPLICATION)
+                    .addFormDataPart(Constants.PARAMETER_API_SECRET, Constants.API_SECRET_APPLICATION)
+                    .addFormDataPart(Constants.PARAMETER_OUTER_ID, Constants.OUTER_ID_TEST)
+                    .addFormDataPart(Constants.PARAMTER_RESULT_COUNT, Constants.DEFAULT_RESULT_COUNT)
+                    .build();
+            Request request = new Request.Builder()
+                    .url(Constants.URL_FACE_SEARCH)
+                    .post(requestBody)
+                    .build();
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    LogUtil.e(Constants.TAG_APPLICATION, e.toString());
+                    showUIToast("检测人脸失败");
                 }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String localResponse = response.body().string();
+                    LogUtil.i(Constants.TAG_APPLICATION, localResponse);
+                    if (!response.isSuccessful()) {
+                        showUIToast("检测人脸失败");
+                    } else {
+                        try {
+                            JSONObject result = new JSONObject(localResponse);
+                            JSONArray facesArray = result.getJSONArray(Constants.VALUE_RETURN_RESULTS);
+                            LogUtil.i(Constants.TAG_APPLICATION, "facesArray length is " + facesArray.length());
+                            if (facesArray.length() != 0) {
+                                final String userId = facesArray.getJSONObject(0)
+                                        .getString(Constants.PARAMETER_USER_ID);
+                                LogUtil.i(Constants.TAG_APPLICATION, "user id is " + userId);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mUserName.setText("你是 " + userId);
+                                    }
+                                });
+                            } else {
+                                showUIToast("没有人脸");
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showUIToast(final String msg) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(DetectFaceActivity.this, msg, Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 }

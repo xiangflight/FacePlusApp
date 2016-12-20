@@ -1,18 +1,28 @@
 package com.hualubeiyou.faceplusapp.ui.activity;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.hualubeiyou.faceplusapp.R;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
+import com.hualubeiyou.faceplusapp.utils.DeviceUtil;
 
 /**
  * Create by flight on 2016/12/15
  */
 public class MainActivity extends AppCompatActivity {
+
+    private static final int REQUEST_FOR_CAPTURE_LOCAL_PHOTO = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +53,30 @@ public class MainActivity extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DetectFaceActivity.startDetectFaceActivity(MainActivity.this);
+                if (DeviceUtil.checkCameraHardware(MainActivity.this)) {
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        DetectFaceActivity.startDetectFaceActivity(MainActivity.this);
+                    } else {
+                        ActivityCompat.requestPermissions(MainActivity.this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                REQUEST_FOR_CAPTURE_LOCAL_PHOTO);
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "没有检测到相机", Toast.LENGTH_SHORT).show();
+                }
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_FOR_CAPTURE_LOCAL_PHOTO) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                DetectFaceActivity.startDetectFaceActivity(MainActivity.this);
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -53,4 +84,5 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         ActivityStackManager.getInstance().popAllActivities();
     }
+
 }

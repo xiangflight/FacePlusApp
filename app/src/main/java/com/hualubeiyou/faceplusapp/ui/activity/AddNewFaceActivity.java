@@ -29,6 +29,7 @@ import android.widget.Toast;
 import com.hualubeiyou.faceplusapp.R;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
 import com.hualubeiyou.faceplusapp.utils.Constants;
+import com.hualubeiyou.faceplusapp.utils.DeviceUtil;
 import com.hualubeiyou.faceplusapp.utils.FileUtil;
 import com.hualubeiyou.faceplusapp.utils.LogUtil;
 import com.hualubeiyou.faceplusapp.utils.NetworkUtil;
@@ -67,7 +68,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
 
     private static final int REQUEST_FOR_COPY_LOCAL_FILE = 4;
 
-    private static final int UP_LIMIT_FILES = 10;
+
 
     private static final String authority = "com.hualubeiyou.android.fileprovider";
 
@@ -108,11 +109,15 @@ public class AddNewFaceActivity extends AppCompatActivity {
         mIvCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!TextUtils.isEmpty(mEtInputName.getText())) {
-                    openCamera();
+                if (DeviceUtil.checkCameraHardware(AddNewFaceActivity.this)) {
+                    if (!TextUtils.isEmpty(mEtInputName.getText())) {
+                        openCamera();
+                    } else {
+                        Toast.makeText(AddNewFaceActivity.this,
+                                R.string.please_input_name_first, Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    Toast.makeText(AddNewFaceActivity.this,
-                            R.string.please_input_name_first, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddNewFaceActivity.this, "没有检测到相机", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -280,6 +285,8 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     private void upLoadImage() {
+        LogUtil.d(Constants.TAG_APPLICATION, PreferenceUtil.getInstance().getValue(Constants.OUTER_ID_KEY) +
+                                              "-----" + Constants.OUTER_ID_TEST);
         if (!PreferenceUtil.getInstance().getValue(Constants.OUTER_ID_KEY)
                 .equals(Constants.OUTER_ID_TEST)) {
             createFaceSet();
@@ -478,7 +485,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
         LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + mCurrentPhotoName);
         // private storage
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        if (storageDir != null && storageDir.listFiles().length >= UP_LIMIT_FILES) {
+        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
             for (File file : storageDir.listFiles()) {
                 file.deleteOnExit();
             }

@@ -97,7 +97,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/iv_show"
         android:layout_alignStart="@id/iv_show"
-        android:layout_marginStart="@dimen/dp_140"
         android:layout_marginTop="@dimen/dp_6"
         android:text="@string/upload_image"
         android:textStyle="bold"
