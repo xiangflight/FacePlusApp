@@ -20,7 +20,7 @@ public class Constants {
 
     public static final String API_SECRET_APPLICATION = "KRsi-np3o15OMftmG9kSFy3LiTAYWPiv";
 
-    public static final String OUTER_ID_TEST = "OUTER_ID_DEVELOPMENT_3";
+    public static final String OUTER_ID_TEST = "OUTER_ID_DEVELOPMENT_4";
 
     public static final String OUTER_ID_KEY = "OUTER_ID_KEY";
 

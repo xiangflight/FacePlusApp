@@ -74,28 +74,37 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
 
         // Create an instance of Camera in a separate thread not to bog down the UI thread.
         mCamera = getFrontCamera(ID_FRONT_CAMERA);
-        initMediaPlayer();
         initView();
     }
 
     private void initMediaPlayer() {
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        File introFile = new File("/sdcard/Download/小幸运.mp3");
-        Uri introUri = Uri.fromFile(introFile);
-        isFirstPlay = true;
-        try {
-            mMediaPlayer.setDataSource(this, introUri);
-            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mMediaPlayer.start();
-                    isFirstPlay = false;
+        final String introFileName = mTvPersonName.getText().toString();
+        // a I/O operation
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                File introFile = getPersonRecord(introFileName);
+                LogUtil.d(Constants.TAG_APPLICATION, "get record file name path is "
+                        + introFile.getAbsolutePath());
+                Uri introUri = Uri.fromFile(introFile);
+                isFirstPlay = true;
+                try {
+                    mMediaPlayer.setDataSource(DetectFaceActivity.this, introUri);
+                    mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                        @Override
+                        public void onPrepared(MediaPlayer mp) {
+                            mMediaPlayer.start();
+                            isFirstPlay = false;
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                return null;
+            }
+        }.execute();
     }
 
     /** Create our Preview view and set it as the content of our activity */
@@ -309,6 +318,10 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                                         }.execute();
                                         mTvPersonInfo.setText(PreferenceUtil.getInstance().getValue(userId));
                                         mTvPersonName.setText(userId);
+                                        mTvPersonName.setVisibility(View.VISIBLE);
+                                        mTvPersonInfo.setVisibility(View.VISIBLE);
+                                        mIvPlayIntro.setVisibility(View.VISIBLE);
+                                        initMediaPlayer();
                                     }
                                 });
                             } else {
@@ -358,6 +371,18 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                 }
             }
         }
+    }
+
+    private File getPersonRecord(String userId) {
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+        if (storageDir != null) {
+            for (File file: storageDir.listFiles()) {
+                if (file.getName().split("_")[1].equals(userId)) {
+                    return file;
+                }
+            }
+        }
+        return null;
     }
 
     private void showUIToast(final String msg) {

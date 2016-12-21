@@ -24,7 +24,7 @@
             android:id="@+id/tv_logo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/sp_32"
+            android:textSize="@dimen/sp_24"
             android:textColor="@color/base_theme_color"
             android:text="@string/face_detect_system"
             android:layout_marginTop="@dimen/dp_24"
@@ -59,6 +59,7 @@
             android:textSize="@dimen/sp_24"
             android:textStyle="bold"
             android:textColor="@color/base_theme_color"
+            android:visibility="gone"
             />
 
         <TextView
@@ -71,6 +72,7 @@
             android:textSize="@dimen/sp_14"
             android:text="个人介绍"
             android:textColor="@color/base_theme_color"
+            android:visibility="gone"
             />
 
         <ImageView
@@ -83,6 +85,7 @@
             android:src="@drawable/ic_play_intro"
             android:layout_centerHorizontal="true"
             android:onClick="control_play"
+            android:visibility="gone"
             />
 
     </RelativeLayout>

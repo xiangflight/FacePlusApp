@@ -7,17 +7,6 @@
     tools:context="com.hualubeiyou.faceplusapp.ui.activity.MainActivity"
     android:background="@color/color_white">
 
-    <TextView
-        android:id="@+id/tv_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:text="@string/face_detect_system"
-        android:textColor="@color/base_theme_color"
-        android:textSize="@dimen/sp_24"
-        android:textStyle="bold"
-        android:layout_marginTop="@dimen/dp_16"/>
-
     <LinearLayout
         android:baselineAligned="false"
         android:layout_below="@id/tv_title"
@@ -85,5 +74,17 @@
         </RelativeLayout>
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/face_detect_system"
+        android:textColor="@color/base_theme_color"
+        android:textSize="@dimen/sp_24"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

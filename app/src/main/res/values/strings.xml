@@ -14,4 +14,5 @@
     <string name="portrait_name">portrait name</string>
     <string name="upload_image">upload image</string>
     <string name="play_intro">play introduction</string>
+    <string name="record_intro">Record introduction</string>
 </resources>

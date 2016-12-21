@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -68,11 +69,17 @@ public class AddNewFaceActivity extends AppCompatActivity {
 
     private static final int REQUEST_FOR_COPY_LOCAL_FILE = 4;
 
+    private static final int REQUEST_FOR_RECORD_AUDIO = 5;
+
     private Button mBtnUpload;
     private EditText mEtInputName;
     private EditText mEtPersonInfo;
     private ImageView mIvPicture;
     private TextView mTvPortraitName;
+
+    private ImageView mIvRecord;
+    private MediaRecorder mRecorder;
+    private boolean mStartRecording;
 
     // 当前需要上传的文件路径
     private String mCurrentPhotoName;
@@ -84,6 +91,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_new_face);
         ActivityStackManager.getInstance().pushActivity(this);
+        mStartRecording = true;
     }
 
     @Override
@@ -100,6 +108,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
         mIvPicture = (ImageView) findViewById(R.id.iv_show);
         mTvPortraitName = (TextView) findViewById(R.id.tv_portrait_name);
         mBtnUpload = (Button) findViewById(R.id.btn_upload);
+        mIvRecord = (ImageView) findViewById(R.id.iv_record);
         setListeners(mIvCamera, mIvFolder);
     }
 
@@ -130,6 +139,75 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    public void recordIntro(View view) {
+        if (!TextUtils.isEmpty(mEtInputName.getText())) {
+            verifyAudioPermission();
+        } else {
+            Toast.makeText(AddNewFaceActivity.this,
+                    R.string.please_input_name_first, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void verifyAudioPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+            recordAudio();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_FOR_RECORD_AUDIO);
+        }
+    }
+
+    public void recordAudio() {
+        onRecord(mStartRecording);
+        if (mStartRecording) {
+            mIvRecord.setImageResource(R.drawable.ic_play_record);
+        } else {
+            mIvRecord.setImageResource(R.drawable.ic_pause_record);
+        }
+        mStartRecording = ! mStartRecording;
+    }
+
+    private void onRecord(boolean start) {
+        if (start) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    }
+
+    private void startRecording() {
+        mRecorder = new MediaRecorder();
+        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        // Create the File where the record file should go
+        File recordFile = null;
+        try {
+            recordFile = createRecordFile();
+        } catch (IOException ex) {
+            // Error occurred while creating the file...
+        }
+        // Continue only if the file was successfully created
+        if (recordFile != null) {
+            mRecorder.setOutputFile(recordFile.getAbsolutePath());
+        }
+        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+
+        try {
+            mRecorder.prepare();
+        } catch (IOException e) {
+            LogUtil.e(Constants.TAG_APPLICATION, "prepare() failed");
+        }
+
+        mRecorder.start();
+    }
+
+    private void stopRecording() {
+        mRecorder.stop();
+        mRecorder.release();
+        mRecorder = null;
     }
 
     private void openCamera() {
@@ -167,6 +245,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
         } else if (requestCode == REQUEST_FOR_COPY_LOCAL_FILE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getPhotoFromFolder();
+            }
+        } else if (requestCode == REQUEST_FOR_RECORD_AUDIO) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                recordAudio();
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -476,6 +558,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        if (mRecorder != null) {
+            mRecorder.release();
+            mRecorder = null;
+        }
         ActivityStackManager.getInstance().popActivity(this);
     }
 
@@ -484,6 +570,22 @@ public class AddNewFaceActivity extends AppCompatActivity {
         context.startActivity(intent);
     }
 
+    private File createRecordFile() throws IOException {
+        String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
+        String recordFileName = timeStamp + "_" + mEtInputName.getText() + "_";
+        LogUtil.d(Constants.TAG_APPLICATION, "recordFile Name is " + recordFileName);
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+            for (File file : storageDir.listFiles()) {
+                file.deleteOnExit();
+            }
+        }
+        return File.createTempFile(
+                recordFileName, /* prefix */
+                ".3gp",        /* suffix */
+                storageDir     /* directory */
+        );
+    }
     private File createImageFile() throws IOException {
         String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
         mCurrentPhotoName = timeStamp + "_" + mEtInputName.getText() + "_";

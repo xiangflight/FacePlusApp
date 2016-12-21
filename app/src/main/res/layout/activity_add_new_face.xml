@@ -145,5 +145,17 @@
         android:layout_marginTop="@dimen/dp_10"
         android:layout_alignStart="@+id/tv_person_info" />
 
+    <ImageView
+        android:id="@+id/iv_record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/record_intro"
+        android:src="@drawable/ic_pause_record"
+        android:layout_below="@id/et_person_info"
+        android:padding="@dimen/dp_6"
+        android:layout_alignEnd="@id/et_person_info"
+        android:onClick="recordIntro"
+        />
+
 
 </RelativeLayout>

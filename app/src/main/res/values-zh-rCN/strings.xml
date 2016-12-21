@@ -14,4 +14,5 @@
     <string name="portrait_name">头像姓名</string>
     <string name="upload_image">上传</string>
     <string name="play_intro">播放个人简介</string>
+    <string name="record_intro">录制个人简介</string>
 </resources>
