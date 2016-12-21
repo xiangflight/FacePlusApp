@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Created by flight on 2016/12/20
- * use to custom camera preview.
+ * use to customize camera preview.
  */
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback{
@@ -22,14 +22,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private SurfaceHolder mHolder;
     private Camera mCamera;
 
-    public CameraPreview(Context context, Camera camera) {
-        super(context);
-        mCamera = camera;
+    public CameraPreview(Context context, AttributeSet attrs) {
+        super(context, attrs);
 
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
         mHolder = getHolder();
         mHolder.addCallback(this);
+    }
+
+    public void setCamera(Camera camera) {
+        this.mCamera = camera;
     }
 
     @Override

@@ -38,6 +38,7 @@
     <dimen name="dp_200">200dp</dimen>
     <dimen name="dp_240">240dp</dimen>
     <dimen name="dp_384">384dp</dimen>
+    <dimen name="dp_400">400dp</dimen>
 
     <!-- sp range -->
     <dimen name="sp_1">1sp</dimen>

@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">FacePlusApp</string>
     <string name="back_off">back off</string>
-    <string name="face_detect_system">Face Detect System</string>
+    <string name="face_detect_system">HuaYou Face Detect System</string>
     <string name="add_new_face">Add New Face</string>
     <string name="detect_in_real_time">Real-Time Detection</string>
     <string name="et_hint_in_add_new_face">Input name</string>
+    <string name="et_hint_in_add_person_info">Input Personal Info</string>
     <string name="et_hint_warning">*Must input name</string>
     <string name="image_add_by_camera">Add Photo by camera</string>
     <string name="image_add_by_folder">Add Photo by local files</string>

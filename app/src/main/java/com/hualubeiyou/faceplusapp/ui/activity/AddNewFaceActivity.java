@@ -68,12 +68,9 @@ public class AddNewFaceActivity extends AppCompatActivity {
 
     private static final int REQUEST_FOR_COPY_LOCAL_FILE = 4;
 
-
-
-    private static final String authority = "com.hualubeiyou.android.fileprovider";
-
     private Button mBtnUpload;
     private EditText mEtInputName;
+    private EditText mEtPersonInfo;
     private ImageView mIvPicture;
     private TextView mTvPortraitName;
 
@@ -97,6 +94,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
 
     private void bindViewsAndListeners() {
         mEtInputName = (EditText) findViewById(R.id.et_input_name);
+        mEtPersonInfo = (EditText) findViewById(R.id.et_person_info);
         ImageView mIvCamera = (ImageView) findViewById(R.id.iv_camera);
         ImageView mIvFolder = (ImageView) findViewById(R.id.iv_folder);
         mIvPicture = (ImageView) findViewById(R.id.iv_show);
@@ -189,7 +187,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
             if (photoFile != null) {
                 Uri photoURI;
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                    photoURI = FileProvider.getUriForFile(this, authority, photoFile);
+                    photoURI = FileProvider.getUriForFile(this, Constants.authority, photoFile);
                 } else {
                     photoURI = Uri.fromFile(photoFile);
                 }
@@ -291,7 +289,14 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 .equals(Constants.OUTER_ID_TEST)) {
             createFaceSet();
         }
+        boolean storage = storePersonInfo();
+        LogUtil.d(Constants.TAG_APPLICATION, "storage status is " + storage);
         realUpLoadImage();
+    }
+
+    private boolean storePersonInfo() {
+        return PreferenceUtil.getInstance().setValue(mEtInputName.getText().toString(),
+                mEtPersonInfo.getText().toString());
     }
 
     /**
@@ -412,7 +417,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    showUIToast("检测人脸失败");
+                    showUIToast("设置人脸身份失败");
                 } else {
                     LogUtil.i(Constants.TAG_APPLICATION, response.body().string());
                     addFaceToFaceSet();

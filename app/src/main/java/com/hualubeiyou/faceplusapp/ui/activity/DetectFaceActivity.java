@@ -14,6 +14,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +24,7 @@ import com.hualubeiyou.faceplusapp.ui.views.CameraPreview;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
 import com.hualubeiyou.faceplusapp.utils.Constants;
 import com.hualubeiyou.faceplusapp.utils.LogUtil;
+import com.hualubeiyou.faceplusapp.utils.PreferenceUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,13 +49,15 @@ import okhttp3.Response;
 
 public class DetectFaceActivity extends AppCompatActivity implements Camera.PreviewCallback{
 
-    private CameraPreview mPreview;
     private Camera mCamera;
-    private TextView mUserName;
 
     private FaceDetectTask mFaceDetectTask;
 
     private static final int ID_FRONT_CAMERA = 1;
+
+    private ImageView mIvPersonPhoto;
+    private TextView mTvPersonName;
+    private TextView mTvPersonInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,27 +72,19 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
 
     /** Create our Preview view and set it as the content of our activity */
     private void initView() {
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.setOnClickListener(onClickListener);
-        preview.addView(mPreview);
-        mUserName = (TextView) findViewById(R.id.tv_who_name);
+        FrameLayout previewContainer = (FrameLayout) findViewById(R.id.camera_preview_container);
+        previewContainer.setOnClickListener(onClickListener);
+        CameraPreview preview = (CameraPreview) findViewById(R.id.camera_preview);
+        preview.setCamera(mCamera);
+        mIvPersonPhoto = (ImageView) findViewById(R.id.iv_detect_person);
+        mTvPersonName = (TextView) findViewById(R.id.tv_detect_name);
+        mTvPersonInfo = (TextView) findViewById(R.id.tv_person_info);
     }
+
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (mCamera == null) {
-            mCamera = getFrontCamera(ID_FRONT_CAMERA);
-            if (mPreview.getHolder() != null) {
-                try {
-                    mCamera.setPreviewDisplay(mPreview.getHolder());
-                    mCamera.startPreview();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 
     @Override
@@ -169,18 +166,18 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         }
     };
 
-//    private Camera.AutoFocusCallback autoFocusCallback = new Camera.AutoFocusCallback() {
-//        @Override
-//        public void onAutoFocus(boolean success, Camera camera) {
-//            if (success) {
-//                LogUtil.i(Constants.TAG_APPLICATION, "auto success");
-//                mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
-//            } else {
-//                LogUtil.i(Constants.TAG_APPLICATION, "auto success");
-////                mCamera.autoFocus(autoFocusCallback);
-//            }
-//        }
-//    };
+    private Camera.AutoFocusCallback autoFocusCallback = new Camera.AutoFocusCallback() {
+        @Override
+        public void onAutoFocus(boolean success, Camera camera) {
+            if (success) {
+                LogUtil.i(Constants.TAG_APPLICATION, "auto success");
+                mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+            } else {
+                LogUtil.i(Constants.TAG_APPLICATION, "auto success");
+//                mCamera.autoFocus(autoFocusCallback);
+            }
+        }
+    };
 
     /** 自定义AsyncTask类转化文件并上传比对 */
     private class FaceDetectTask extends AsyncTask<Void, Void, File> {
@@ -264,7 +261,16 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mUserName.setText("你是 " + userId);
+                                        //照片，姓名及简介
+                                        new AsyncTask<Void, Void, Void>() {
+                                            @Override
+                                            protected Void doInBackground(Void... params) {
+                                                showPersonPhoto(userId);
+                                                return null;
+                                            }
+                                        }.execute();
+                                        mTvPersonInfo.setText(PreferenceUtil.getInstance().getValue(userId));
+                                        mTvPersonName.setText(userId);
                                     }
                                 });
                             } else {
@@ -279,6 +285,25 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
             });
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /** a async thread operation. */
+    private void showPersonPhoto(String userId) {
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (storageDir != null) {
+            for (File file: storageDir.listFiles()) {
+                if (file.getName().split("_")[1].equals(userId)) {
+                    final Bitmap photoBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mIvPersonPhoto.setImageBitmap(photoBitmap);
+                        }
+                    });
+                    break;
+                }
+            }
         }
     }
 

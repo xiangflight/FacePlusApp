@@ -10,6 +10,8 @@ public class Constants {
 
     static final boolean TAG_VERSION_DEBUG = true;
 
+    public static final String authority = "com.hualubeiyou.android.fileprovider";
+
     public static final String FILE_NAME_SUFFIX_FORMAT="yyyyMMdd";
 
     public static final int UP_LIMIT_FILES = 10;
