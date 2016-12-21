@@ -73,6 +73,18 @@
             android:textColor="@color/base_theme_color"
             />
 
+        <ImageView
+            android:id="@+id/iv_play_intro"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/play_intro"
+            android:layout_below="@id/tv_person_info"
+            android:layout_marginTop="@dimen/dp_24"
+            android:src="@drawable/ic_play_intro"
+            android:layout_centerHorizontal="true"
+            android:onClick="control_play"
+            />
+
     </RelativeLayout>
 
 </LinearLayout>

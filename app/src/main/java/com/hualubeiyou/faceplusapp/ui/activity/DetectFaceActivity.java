@@ -8,6 +8,9 @@ import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -15,7 +18,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,6 +60,11 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     private ImageView mIvPersonPhoto;
     private TextView mTvPersonName;
     private TextView mTvPersonInfo;
+    private ImageView mIvPlayIntro;
+
+    private MediaPlayer mMediaPlayer;
+    private boolean isFirstPlay;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +74,28 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
 
         // Create an instance of Camera in a separate thread not to bog down the UI thread.
         mCamera = getFrontCamera(ID_FRONT_CAMERA);
+        initMediaPlayer();
         initView();
+    }
+
+    private void initMediaPlayer() {
+        mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        File introFile = new File("/sdcard/Download/小幸运.mp3");
+        Uri introUri = Uri.fromFile(introFile);
+        isFirstPlay = true;
+        try {
+            mMediaPlayer.setDataSource(this, introUri);
+            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mMediaPlayer.start();
+                    isFirstPlay = false;
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /** Create our Preview view and set it as the content of our activity */
@@ -79,6 +107,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         mIvPersonPhoto = (ImageView) findViewById(R.id.iv_detect_person);
         mTvPersonName = (TextView) findViewById(R.id.tv_detect_name);
         mTvPersonInfo = (TextView) findViewById(R.id.tv_person_info);
+        mIvPlayIntro = (ImageView) findViewById(R.id.iv_play_intro);
     }
 
 
@@ -91,7 +120,16 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     protected void onPause() {
         super.onPause();
         releaseCameraAndPreview();
+        releaseMediaPlayer();
         ActivityStackManager.getInstance().popActivity(this);
+    }
+
+    private void releaseMediaPlayer() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.stop();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
     }
 
     public static void startDetectFaceActivity(Context context) {
@@ -288,7 +326,22 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         }
     }
 
-    /** a async thread operation. */
+    public void control_play(View view) {
+        if (mMediaPlayer.isPlaying()) {
+            mIvPlayIntro.setImageResource(R.drawable.ic_play_intro);
+            mMediaPlayer.pause();
+        } else {
+            mIvPlayIntro.setImageResource(R.drawable.ic_pause_intro);
+            if (isFirstPlay) {
+                mMediaPlayer.prepareAsync();
+            } else {
+                mMediaPlayer.start();
+            }
+        }
+
+    }
+
+    /** an async thread operation. */
     private void showPersonPhoto(String userId) {
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         if (storageDir != null) {
