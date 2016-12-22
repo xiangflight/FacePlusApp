@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
@@ -12,6 +13,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,6 +27,7 @@ import com.hualubeiyou.faceplusapp.R;
 import com.hualubeiyou.faceplusapp.ui.views.CameraPreview;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
 import com.hualubeiyou.faceplusapp.utils.Constants;
+import com.hualubeiyou.faceplusapp.utils.FileUtil;
 import com.hualubeiyou.faceplusapp.utils.LogUtil;
 import com.hualubeiyou.faceplusapp.utils.PreferenceUtil;
 
@@ -34,7 +37,6 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -86,21 +88,35 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
             @Override
             protected Void doInBackground(Void... params) {
                 File introFile = getPersonRecord(introFileName);
-                LogUtil.d(Constants.TAG_APPLICATION, "get record file name path is "
-                        + introFile.getAbsolutePath());
-                Uri introUri = Uri.fromFile(introFile);
-                isFirstPlay = true;
-                try {
-                    mMediaPlayer.setDataSource(DetectFaceActivity.this, introUri);
-                    mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                if (introFile != null) {
+                    runOnUiThread(new Runnable() {
                         @Override
-                        public void onPrepared(MediaPlayer mp) {
-                            mMediaPlayer.start();
-                            isFirstPlay = false;
+                        public void run() {
+                            mIvPlayIntro.setVisibility(View.VISIBLE);
                         }
                     });
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    Uri introUri = Uri.fromFile(introFile);
+                    isFirstPlay = true;
+                    try {
+                        mMediaPlayer.setDataSource(DetectFaceActivity.this, introUri);
+                        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                            @Override
+                            public void onPrepared(MediaPlayer mp) {
+                                mMediaPlayer.start();
+                                isFirstPlay = false;
+                            }
+                        });
+                        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                mIvPlayIntro.setImageResource(R.drawable.ic_play_intro);
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    showUIToast("没有录制介绍");
                 }
                 return null;
             }
@@ -167,17 +183,17 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         }
     }
 
-    private File createPhoto() {
+    private File createPhoto() throws IOException {
         String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
-        String detectPhotoName = timeStamp + "_" + "_";
+        String detectPhotoName = timeStamp + "_";
         LogUtil.d(Constants.TAG_APPLICATION, "detectPhotoName name is " + detectPhotoName);
         // private storage
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
-            for (File file : storageDir.listFiles()) {
-                file.deleteOnExit();
-            }
-        }
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+//        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+//            for (File file : storageDir.listFiles()) {
+//                file.deleteOnExit();
+//            }
+//        }
         File photo = null;
         try {
             photo = File.createTempFile(
@@ -209,9 +225,23 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+            initIntros();
+            if (Constants.DETECT_USE_LIMIT >= 0) {
+                mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+                Constants.DETECT_USE_LIMIT--;
+            } else {
+                Toast.makeText(DetectFaceActivity.this, "使用次数已打上限", Toast.LENGTH_SHORT).show();
+            }
+
         }
     };
+
+    private void initIntros() {
+        mIvPersonPhoto.setVisibility(View.GONE);
+        mTvPersonName.setVisibility(View.GONE);
+        mTvPersonInfo.setVisibility(View.GONE);
+        mIvPlayIntro.setVisibility(View.GONE);
+    }
 
     private Camera.AutoFocusCallback autoFocusCallback = new Camera.AutoFocusCallback() {
         @Override
@@ -247,24 +277,36 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
             }
             byte[] tmpData = os.toByteArray(); // JPEG二进制数据
             Bitmap bmp = BitmapFactory.decodeByteArray(tmpData, 0, tmpData.length);
-//            doSomethingNeeded(bmp);
-            File file = createPhoto();
-            FileOutputStream fos;
-            try {
-                fos = new FileOutputStream(file);
-                fos.write(tmpData);
-                fos.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-            return file;
+            return handleBitmap(bmp);
         }
 
         @Override
         protected void onPostExecute(File file) {
             searchFace(file);
         }
+    }
+
+    private File handleBitmap(Bitmap bmp) {
+        Bitmap bitmap = bmp;
+        if (Build.MANUFACTURER.equals("Huawei")) {
+            bitmap = extraHandle(bitmap);
+        }
+        File file = null;
+        try {
+            file = createPhoto();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (file != null) {
+            FileUtil.bitmapToJpeg(bitmap, file);
+        }
+        return file;
+    }
+
+    private Bitmap extraHandle(Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        matrix.setRotate(180);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, false);
     }
 
     private void searchFace(File file) {
@@ -320,7 +362,6 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                                         mTvPersonName.setText(userId);
                                         mTvPersonName.setVisibility(View.VISIBLE);
                                         mTvPersonInfo.setVisibility(View.VISIBLE);
-                                        mIvPlayIntro.setVisibility(View.VISIBLE);
                                         initMediaPlayer();
                                     }
                                 });
@@ -356,7 +397,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
 
     /** an async thread operation. */
     private void showPersonPhoto(String userId) {
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         if (storageDir != null) {
             for (File file: storageDir.listFiles()) {
                 if (file.getName().split("_")[1].equals(userId)) {
@@ -364,6 +405,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            mIvPersonPhoto.setVisibility(View.VISIBLE);
                             mIvPersonPhoto.setImageBitmap(photoBitmap);
                         }
                     });

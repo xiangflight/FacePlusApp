@@ -3,6 +3,7 @@ package com.hualubeiyou.faceplusapp.application;
 import android.app.Application;
 
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
+import com.hualubeiyou.faceplusapp.utils.Constants;
 import com.hualubeiyou.faceplusapp.utils.PreferenceUtil;
 
 /**
@@ -16,5 +17,6 @@ public class FacePlusAppApplication extends Application {
         super.onCreate();
         ActivityStackManager.getInstance().init();
         PreferenceUtil.getInstance().init(this);
+        Constants.DETECT_USE_LIMIT = 5;
     }
 }

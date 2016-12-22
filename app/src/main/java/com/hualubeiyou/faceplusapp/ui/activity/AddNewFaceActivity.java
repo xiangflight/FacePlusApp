@@ -41,9 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -82,8 +80,9 @@ public class AddNewFaceActivity extends AppCompatActivity {
     private boolean mStartRecording;
 
     // 当前需要上传的文件路径
-    private String mCurrentPhotoName;
-    private String mCurrentPhotoPath;
+    private String mUploadPhotoName;
+    private String mUploadPhotoPath;
+    private String mCameraPhotoPath;
     private String mFaceToken;
 
     @Override
@@ -317,8 +316,24 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     private void showOriginalImage() {
-        Bitmap portraitBitmap = getScaledImage(mCurrentPhotoPath, mIvPicture);
+        final Bitmap portraitBitmap = getScaledImage(mCameraPhotoPath, mIvPicture);
         mIvPicture.setImageBitmap(portraitBitmap);
+        // 压缩后的Bitmap，存入Documents文件夹
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                File file = null;
+                try {
+                    file = createCompressedFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (file != null) {
+                    FileUtil.bitmapToJpeg(portraitBitmap, file);
+                }
+                return null;
+            }
+        }.execute();
     }
 
     private void showLocalImage(Intent data) {
@@ -332,25 +347,22 @@ public class AddNewFaceActivity extends AppCompatActivity {
         }
         mIvPicture.setImageBitmap(bitmap);
         // 新创建一个文件，写入该uri对应的文件内容，是一个I/O操作，放在AsyncTask里写
-        CopiedFileTask mCopyTask = new CopiedFileTask();
-        mCopyTask.execute(uri);
+        CompressedTask mCompressedTask = new CompressedTask();
+        mCompressedTask.execute(bitmap);
     }
 
-    private class CopiedFileTask extends AsyncTask<Uri, Void, Void> {
+    private class CompressedTask extends AsyncTask<Bitmap, Void, Void> {
 
         @Override
-        protected Void doInBackground(Uri... uris) {
-            File copiedFile;
-            String destPath = null;
+        protected Void doInBackground(Bitmap... bitmap) {
+            File upLoadFile = null;
             try {
-                copiedFile = createImageFile();
-                destPath = copiedFile.getAbsolutePath();
+                upLoadFile = createCompressedFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            String srcPath = FileUtil.getRealPathFromUri_AboveApi19(AddNewFaceActivity.this, uris[0]);
-            if(copyFile(srcPath, destPath)) {
-                LogUtil.d(Constants.TAG_APPLICATION, "copy successfully");
+            if (upLoadFile != null) {
+                FileUtil.bitmapToJpeg(bitmap[0], upLoadFile);
             }
             return null;
         }
@@ -425,7 +437,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
      * 检测人脸
      */
     private void detectFace() {
-        File detectFile = new File(mCurrentPhotoPath);
+        File detectFile = new File(mUploadPhotoPath);
         OkHttpClient client = new OkHttpClient();
         try {
             RequestBody requestBody = new MultipartBody.Builder()
@@ -478,7 +490,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
 
     private void setFaceUserId() {
         OkHttpClient client = new OkHttpClient();
-        String userId = mCurrentPhotoName.split("_")[1];
+        String userId = mUploadPhotoName.split("_")[1];
         FormBody.Builder formBodyBuilder = new FormBody.Builder();
         formBodyBuilder.add(Constants.PARAMETER_API_KEY, Constants.API_KEY_APPLICATION);
         formBodyBuilder.add(Constants.PARAMETER_API_SECRET, Constants.API_SECRET_APPLICATION);
@@ -575,11 +587,11 @@ public class AddNewFaceActivity extends AppCompatActivity {
         String recordFileName = timeStamp + "_" + mEtInputName.getText() + "_";
         LogUtil.d(Constants.TAG_APPLICATION, "recordFile Name is " + recordFileName);
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
-        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
-            for (File file : storageDir.listFiles()) {
-                file.deleteOnExit();
-            }
-        }
+//        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+//            for (File file : storageDir.listFiles()) {
+//                file.deleteOnExit();
+//            }
+//        }
         return File.createTempFile(
                 recordFileName, /* prefix */
                 ".3gp",        /* suffix */
@@ -588,58 +600,51 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
     private File createImageFile() throws IOException {
         String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
-        mCurrentPhotoName = timeStamp + "_" + mEtInputName.getText() + "_";
-        LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + mCurrentPhotoName);
+        String currentPhotoName = timeStamp + "_" + mEtInputName.getText() + "_";
+        LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + currentPhotoName);
         // private storage
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
-            for (File file : storageDir.listFiles()) {
-                file.deleteOnExit();
-            }
-        }
+//        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+//            for (File file : storageDir.listFiles()) {
+//                file.deleteOnExit();
+//            }
+//        }
         File image = File.createTempFile(
-                mCurrentPhotoName, /* prefix */
+                currentPhotoName, /* prefix */
                 ".jpg",        /* suffix */
                 storageDir     /* directory */
         );
         // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = image.getAbsolutePath();
+        mCameraPhotoPath = image.getAbsolutePath();
         return image;
+    }
+
+    private File createCompressedFile() throws IOException {
+        String timeStamp = new SimpleDateFormat(Constants.FILE_NAME_SUFFIX_FORMAT, Locale.CHINA).format(new Date());
+        mUploadPhotoName = timeStamp + "_" + mEtInputName.getText() + "_";
+        LogUtil.d(Constants.TAG_APPLICATION, "upLoadFile Name is " + mUploadPhotoName);
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+//        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+//            for (File file : storageDir.listFiles()) {
+//                file.deleteOnExit();
+//            }
+//        }
+        File upLoadFile =  File.createTempFile(
+                mUploadPhotoName, /* prefix */
+                ".jpg",        /* suffix */
+                storageDir     /* directory */
+        );
+        mUploadPhotoPath = upLoadFile.getAbsolutePath();
+        return upLoadFile;
     }
 
     // Add the portrait to the galley
     private void galleryAddPic() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File portraitPhoto = new File(mCurrentPhotoPath);
+        File portraitPhoto = new File(mCameraPhotoPath);
         Uri portraitUri = Uri.fromFile(portraitPhoto);
         mediaScanIntent.setData(portraitUri);
         this.sendBroadcast(mediaScanIntent);
-    }
-
-
-
-    /**
-     * 复制单个文件
-     * @param srcPath String 原文件路径
-     * @param destPath String 复制后路径
-     * @return boolean
-     */
-    public boolean copyFile(String srcPath, String destPath) {
-        try {
-            int byteRead;
-            FileInputStream fis = new FileInputStream(srcPath); //读入原文件
-            FileOutputStream fos = new FileOutputStream(destPath); //写入新文件
-            byte[] buffer = new byte[1444];
-            while ( (byteRead = fis.read(buffer)) != -1) {
-                fos.write(buffer, 0, byteRead);
-            }
-            fis.close();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            LogUtil.d(Constants.TAG_APPLICATION, "copy error");
-            return false;
-        }
     }
 
     private void showUIToast(final String msg) {
