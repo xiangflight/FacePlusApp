@@ -86,8 +86,6 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
             @Override
             protected Void doInBackground(Void... params) {
                 File introFile = getPersonRecord(introFileName);
-                LogUtil.d(Constants.TAG_APPLICATION, "get record file name path is "
-                        + introFile.getAbsolutePath());
                 Uri introUri = Uri.fromFile(introFile);
                 isFirstPlay = true;
                 try {
@@ -209,7 +207,13 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+            if (Constants.DETECT_USE_LIMIT >= 0) {
+                mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+                Constants.DETECT_USE_LIMIT--;
+            } else {
+                Toast.makeText(DetectFaceActivity.this, "使用次数已打上限", Toast.LENGTH_SHORT).show();
+            }
+
         }
     };
 

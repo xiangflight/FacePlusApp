@@ -24,6 +24,10 @@ public class Constants {
 
     public static final String OUTER_ID_KEY = "OUTER_ID_KEY";
 
+    public static int DETECT_USE_LIMIT = 5;
+
+    public static int IMAGE_FILE_UPLIMIT = 2 * 1024 * 1024;
+
     //----------------POST REQUEST----------------------------------------------------------
     // FaceSet Create API
     public static final String URL_FACESET_CREATE = "https://api-cn.faceplusplus.com/facepp/v3/faceset/create";
