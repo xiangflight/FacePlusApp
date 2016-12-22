@@ -587,11 +587,11 @@ public class AddNewFaceActivity extends AppCompatActivity {
         String recordFileName = timeStamp + "_" + mEtInputName.getText() + "_";
         LogUtil.d(Constants.TAG_APPLICATION, "recordFile Name is " + recordFileName);
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
-        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
-            for (File file : storageDir.listFiles()) {
-                file.deleteOnExit();
-            }
-        }
+//        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+//            for (File file : storageDir.listFiles()) {
+//                file.deleteOnExit();
+//            }
+//        }
         return File.createTempFile(
                 recordFileName, /* prefix */
                 ".3gp",        /* suffix */
@@ -604,11 +604,11 @@ public class AddNewFaceActivity extends AppCompatActivity {
         LogUtil.d(Constants.TAG_APPLICATION, "imageFile name is " + currentPhotoName);
         // private storage
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
-            for (File file : storageDir.listFiles()) {
-                file.deleteOnExit();
-            }
-        }
+//        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+//            for (File file : storageDir.listFiles()) {
+//                file.deleteOnExit();
+//            }
+//        }
         File image = File.createTempFile(
                 currentPhotoName, /* prefix */
                 ".jpg",        /* suffix */
@@ -624,11 +624,11 @@ public class AddNewFaceActivity extends AppCompatActivity {
         mUploadPhotoName = timeStamp + "_" + mEtInputName.getText() + "_";
         LogUtil.d(Constants.TAG_APPLICATION, "upLoadFile Name is " + mUploadPhotoName);
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
-            for (File file : storageDir.listFiles()) {
-                file.deleteOnExit();
-            }
-        }
+//        if (storageDir != null && storageDir.listFiles().length >= Constants.UP_LIMIT_FILES) {
+//            for (File file : storageDir.listFiles()) {
+//                file.deleteOnExit();
+//            }
+//        }
         File upLoadFile =  File.createTempFile(
                 mUploadPhotoName, /* prefix */
                 ".jpg",        /* suffix */

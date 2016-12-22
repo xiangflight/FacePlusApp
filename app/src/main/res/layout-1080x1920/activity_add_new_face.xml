@@ -35,6 +35,17 @@
         />
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/et_hint_warning"
+        android:textColor="@color/color_red"
+        android:textSize="@dimen/sp_12"
+        android:textStyle="bold"
+        android:layout_above="@+id/iv_camera"
+        android:id="@+id/warning"
+        android:layout_alignEnd="@id/et_input_name"/>
+
+    <TextView
         android:id="@+id/tv_person_info"
         android:layout_below="@id/et_input_name"
         android:layout_width="wrap_content"
@@ -46,17 +57,6 @@
         android:textColor="@color/base_theme_color"
         android:textStyle="bold"
         />
-
-    <TextView
-        android:layout_above="@id/et_input_name"
-        android:layout_alignEnd="@id/et_input_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/et_hint_warning"
-        android:textColor="@color/color_red"
-        android:textSize="@dimen/sp_12"
-        android:textStyle="bold"
-        android:layout_marginBottom="@dimen/dp_2"/>
 
     <ImageView
         android:id="@+id/iv_camera"
@@ -109,8 +109,7 @@
         android:textSize="@dimen/sp_20"
         android:textStyle="bold"
         android:layout_alignStart="@id/iv_show"
-        android:layout_marginStart="@dimen/dp_160"
-        android:layout_marginBottom="@dimen/dp_6"
+        android:layout_marginBottom="@dimen/dp_12"
         android:visibility="gone"/>
 
     <Button
@@ -125,7 +124,7 @@
         android:textSize="@dimen/sp_20"
         android:textColor="@color/base_theme_color"
         android:onClick="uploadImage"
-        android:visibility="visible"
+        android:visibility="gone"
         />
 
     <EditText

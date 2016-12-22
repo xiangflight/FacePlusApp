@@ -54,7 +54,7 @@ public class FileUtil {
     public static void bitmapToJpeg(Bitmap bitmap, File file) {
         try {
             FileOutputStream fos = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos); // 压缩20%
             fos.flush();
             fos.close();
         } catch (Exception e) {

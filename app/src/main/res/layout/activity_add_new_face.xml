@@ -47,17 +47,6 @@
         android:textStyle="bold"
         />
 
-    <TextView
-        android:layout_above="@id/et_input_name"
-        android:layout_alignEnd="@id/et_input_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/et_hint_warning"
-        android:textColor="@color/color_red"
-        android:textSize="@dimen/sp_12"
-        android:textStyle="bold"
-        android:layout_marginBottom="@dimen/dp_2"/>
-
     <ImageView
         android:id="@+id/iv_camera"
         android:layout_width="wrap_content"
@@ -156,6 +145,17 @@
         android:layout_alignEnd="@id/et_person_info"
         android:onClick="recordIntro"
         />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/et_hint_warning"
+        android:textColor="@color/color_red"
+        android:textSize="@dimen/sp_12"
+        android:textStyle="bold"
+        android:layout_above="@+id/iv_camera"
+        android:id="@+id/warning"
+        android:layout_alignEnd="@id/et_input_name"/>
 
 
 </RelativeLayout>
