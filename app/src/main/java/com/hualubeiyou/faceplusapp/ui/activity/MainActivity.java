@@ -1,9 +1,7 @@
 package com.hualubeiyou.faceplusapp.ui.activity;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -11,21 +9,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.hualubeiyou.faceplusapp.R;
 import com.hualubeiyou.faceplusapp.utils.ActivityStackManager;
-import com.hualubeiyou.faceplusapp.utils.Constants;
 import com.hualubeiyou.faceplusapp.utils.DeviceUtil;
-import com.hualubeiyou.faceplusapp.utils.LogUtil;
 
 /**
  * Create by flight on 2016/12/15
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_FOR_CAPTURE_LOCAL_PHOTO = 1;
+    private static final int REQUEST_FOR_CAPTURE_LOCAL_PHOTO_AND_OPEN_CAMERA = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,13 +52,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (DeviceUtil.checkCameraHardware(MainActivity.this)) {
-                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                            == PackageManager.PERMISSION_GRANTED
+                            && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                             == PackageManager.PERMISSION_GRANTED) {
                         DetectFaceActivity.startDetectFaceActivity(MainActivity.this);
                     } else {
                         ActivityCompat.requestPermissions(MainActivity.this,
-                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                REQUEST_FOR_CAPTURE_LOCAL_PHOTO);
+                                new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                REQUEST_FOR_CAPTURE_LOCAL_PHOTO_AND_OPEN_CAMERA);
                     }
                 } else {
                     Toast.makeText(MainActivity.this, "没有检测到相机", Toast.LENGTH_SHORT).show();
@@ -74,9 +71,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_FOR_CAPTURE_LOCAL_PHOTO) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == REQUEST_FOR_CAPTURE_LOCAL_PHOTO_AND_OPEN_CAMERA) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 DetectFaceActivity.startDetectFaceActivity(MainActivity.this);
+            } else {
+                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

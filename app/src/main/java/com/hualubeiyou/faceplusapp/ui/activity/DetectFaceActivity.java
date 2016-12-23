@@ -63,9 +63,10 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     private TextView mTvPersonName;
     private TextView mTvPersonInfo;
     private ImageView mIvPlayIntro;
+    private TextView mTvTip;
 
     private MediaPlayer mMediaPlayer;
-    private boolean isFirstPlay;
+    private boolean isFirstPlay = true;
 
 
     @Override
@@ -80,8 +81,10 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     }
 
     private void initMediaPlayer() {
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        if (isFirstPlay) {
+            mMediaPlayer = new MediaPlayer();
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        }
         final String introFileName = mTvPersonName.getText().toString();
         // a I/O operation
         new AsyncTask<Void, Void, Void>() {
@@ -96,7 +99,6 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                         }
                     });
                     Uri introUri = Uri.fromFile(introFile);
-                    isFirstPlay = true;
                     try {
                         mMediaPlayer.setDataSource(DetectFaceActivity.this, introUri);
                         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -133,6 +135,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         mTvPersonName = (TextView) findViewById(R.id.tv_detect_name);
         mTvPersonInfo = (TextView) findViewById(R.id.tv_person_info);
         mIvPlayIntro = (ImageView) findViewById(R.id.iv_play_intro);
+        mTvTip = (TextView) findViewById(R.id.tv_tip);
     }
 
 
@@ -362,6 +365,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                                         mTvPersonName.setText(userId);
                                         mTvPersonName.setVisibility(View.VISIBLE);
                                         mTvPersonInfo.setVisibility(View.VISIBLE);
+                                        mTvTip.setVisibility(View.GONE);
                                         initMediaPlayer();
                                     }
                                 });
