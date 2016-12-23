@@ -6,7 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.hualubeiyou.faceplusapp.ui.activity.AddNewFaceActivity"
-    android:background="@color/color_white">
+    android:background="@color/color_white"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
 
     <TextView
         android:id="@+id/tv_title"
@@ -105,16 +107,31 @@
         app:layout_marginTopPercent="5%"
         />
 
+    <TextView
+        android:id="@+id/tv_record"
+        android:layout_below="@id/et_person_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/et_input_name"
+        android:text="点击右侧按钮录制简介语音"
+        android:textSize="@dimen/sp_16"
+        android:textColor="@color/base_theme_color"
+        android:textStyle="bold"
+        app:layout_marginTopPercent="5%"
+        />
+
     <ImageView
         android:id="@+id/iv_record"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/record_intro"
         android:src="@drawable/ic_pause_record"
-        android:layout_below="@id/et_person_info"
         android:padding="@dimen/dp_6"
-        android:layout_alignEnd="@id/et_person_info"
         android:onClick="recordIntro"
+        android:layout_toEndOf="@id/tv_record"
+        android:layout_below="@id/et_person_info"
+        app:layout_marginTopPercent="2%"
+        app:layout_marginStartPercent="5%"
         />
 
     <ImageView
@@ -129,6 +146,18 @@
         app:layout_marginStartPercent="5%"
         app:layout_marginTopPercent="24%"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/preview_picture"
+        android:textColor="@color/base_theme_color"
+        android:textSize="@dimen/sp_24"
+        android:textStyle="bold"
+        android:layout_toEndOf="@id/iv_separator"
+        app:layout_marginTopPercent="24%"
+        app:layout_marginStartPercent="2%"
+        />
+
     <ImageView
         android:id="@+id/iv_show"
         android:layout_width="0dp"
@@ -137,7 +166,7 @@
         app:layout_heightPercent="40%"
         android:layout_toEndOf="@id/iv_separator"
         app:layout_marginStartPercent="5%"
-        app:layout_marginTopPercent="24%"
+        app:layout_marginTopPercent="36%"
         android:contentDescription="@string/image_show"
         />
 

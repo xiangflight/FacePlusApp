@@ -21,10 +21,10 @@
         android:supportsRtl="true"
         android:theme="@style/FacePlusAppTheme">
         <activity android:name=".ui.activity.MainActivity"
-            android:screenOrientation="landscape">
+            android:screenOrientation="landscape"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

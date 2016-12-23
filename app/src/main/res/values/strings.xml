@@ -16,4 +16,5 @@
     <string name="play_intro">play introduction</string>
     <string name="record_intro">Record introduction</string>
     <string name="separator_line">Separator line</string>
+    <string name="preview_picture">Preview Picture</string>
 </resources>

@@ -24,6 +24,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hualubeiyou.faceplusapp.R;
@@ -72,6 +73,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
     private EditText mEtInputName;
     private EditText mEtPersonInfo;
     private ImageView mIvPicture;
+    private TextView mTvRecord;
 
     private ImageView mIvRecord;
     private MediaRecorder mRecorder;
@@ -105,6 +107,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
         mIvPicture = (ImageView) findViewById(R.id.iv_show);
         mBtnUpload = (Button) findViewById(R.id.btn_upload);
         mIvRecord = (ImageView) findViewById(R.id.iv_record);
+        mTvRecord = (TextView) findViewById(R.id.tv_record);
         setListeners(mIvCamera, mIvFolder);
     }
 
@@ -160,8 +163,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
         onRecord(mStartRecording);
         if (mStartRecording) {
             mIvRecord.setImageResource(R.drawable.ic_play_record);
+            mTvRecord.setText("再次点击停止录制");
         } else {
             mIvRecord.setImageResource(R.drawable.ic_pause_record);
+            mTvRecord.setText("点击右侧按钮录制简介语音");
         }
         mStartRecording = ! mStartRecording;
     }
@@ -413,9 +418,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 LogUtil.i(Constants.TAG_APPLICATION, response.body().string());
-                if (!response.isSuccessful()) {
-                    showUIToast("create FaceSet failure");
-                } else {
+                if (response.isSuccessful()) {
                     PreferenceUtil
                             .getInstance().setValue(Constants.OUTER_ID_KEY, Constants.OUTER_ID_TEST);
                 }
@@ -425,6 +428,7 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     private void realUpLoadImage() {
+        mBtnUpload.setText("正在上传");
         detectFace();
     }
 
@@ -451,6 +455,12 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 public void onFailure(Call call, IOException e) {
                     LogUtil.e(Constants.TAG_APPLICATION, e.toString());
                     showUIToast("检测人脸失败");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mBtnUpload.setText("上传");
+                        }
+                    });
                 }
 
                 @Override
@@ -459,6 +469,12 @@ public class AddNewFaceActivity extends AppCompatActivity {
                     LogUtil.i(Constants.TAG_APPLICATION, localResponse);
                     if (!response.isSuccessful()) {
                         showUIToast("检测人脸失败");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mBtnUpload.setText("上传");
+                            }
+                        });
                     } else {
                         try {
                             JSONObject result = new JSONObject(localResponse);
@@ -501,12 +517,24 @@ public class AddNewFaceActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 LogUtil.e(Constants.TAG_APPLICATION, e.toString());
                 showUIToast("设置人脸身份失败");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBtnUpload.setText("上传");
+                    }
+                });
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
                     showUIToast("设置人脸身份失败");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mBtnUpload.setText("上传");
+                        }
+                    });
                 } else {
                     LogUtil.i(Constants.TAG_APPLICATION, response.body().string());
                     addFaceToFaceSet();
@@ -536,6 +564,12 @@ public class AddNewFaceActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 LogUtil.e(Constants.TAG_APPLICATION, e.toString());
                 showUIToast("添加人脸失败");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBtnUpload.setText("上传");
+                    }
+                });
             }
 
             @Override
@@ -553,10 +587,17 @@ public class AddNewFaceActivity extends AppCompatActivity {
                                 + ";face_count is " + values.getInt(Constants.VALUE_RETURN_FACE_COUNT)
                                 + ";face_added is " + values.getInt(Constants.VALUE_RETURN_FACE_ADDED)
                         );
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBtnUpload.setText("上传");
+                    }
+                });
             }
         });
 

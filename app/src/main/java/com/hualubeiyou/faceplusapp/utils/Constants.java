@@ -1,5 +1,7 @@
 package com.hualubeiyou.faceplusapp.utils;
 
+import android.os.Build;
+
 /**
  * Created by flight on 2016/12/15
  */
@@ -20,11 +22,11 @@ public class Constants {
 
     public static final String API_SECRET_APPLICATION = "KRsi-np3o15OMftmG9kSFy3LiTAYWPiv";
 
-    public static final String OUTER_ID_TEST = "OUTER_ID_DEVELOPMENT_8";
+    public static final String OUTER_ID_TEST = "OUTER_ID_DEVELOPMENT_" + Build.SERIAL;
 
     public static final String OUTER_ID_KEY = "OUTER_ID_KEY";
 
-    public static int DETECT_USE_LIMIT = 5;
+    public static int DETECT_USE_LIMIT = 1;
 
     public static int IMAGE_FILE_UPLIMIT = 2 * 1024 * 1024;
 

@@ -1,5 +1,7 @@
 package com.hualubeiyou.faceplusapp.ui.activity;
 
+import android.animation.ObjectAnimator;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -15,10 +17,12 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.support.percent.PercentFrameLayout;
+import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.SurfaceHolder;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,6 +58,7 @@ import okhttp3.Response;
 public class DetectFaceActivity extends AppCompatActivity implements Camera.PreviewCallback{
 
     private Camera mCamera;
+    private CameraPreview mPreview;
 
     private FaceDetectTask mFaceDetectTask;
 
@@ -62,11 +67,13 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     private ImageView mIvPersonPhoto;
     private TextView mTvPersonName;
     private TextView mTvPersonInfo;
-    private ImageView mIvPlayIntro;
-    private TextView mTvTip;
+    private PercentRelativeLayout mRlpersonInfo;
+    private float originXCoordinate;
 
     private MediaPlayer mMediaPlayer;
     private boolean isFirstPlay = true;
+
+    private ProgressDialog mProgressDialog;
 
 
     @Override
@@ -92,12 +99,6 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
             protected Void doInBackground(Void... params) {
                 File introFile = getPersonRecord(introFileName);
                 if (introFile != null) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mIvPlayIntro.setVisibility(View.VISIBLE);
-                        }
-                    });
                     Uri introUri = Uri.fromFile(introFile);
                     try {
                         mMediaPlayer.setDataSource(DetectFaceActivity.this, introUri);
@@ -108,12 +109,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                                 isFirstPlay = false;
                             }
                         });
-                        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mp) {
-                                mIvPlayIntro.setImageResource(R.drawable.ic_play_intro);
-                            }
-                        });
+                        mMediaPlayer.prepareAsync();//有个人简介，直接播放
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -127,21 +123,33 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
 
     /** Create our Preview view and set it as the content of our activity */
     private void initView() {
-        FrameLayout previewContainer = (FrameLayout) findViewById(R.id.camera_preview_container);
+        PercentFrameLayout previewContainer = (PercentFrameLayout) findViewById(R.id.camera_preview_container);
         previewContainer.setOnClickListener(onClickListener);
-        CameraPreview preview = (CameraPreview) findViewById(R.id.camera_preview);
-        preview.setCamera(mCamera);
+        mPreview = (CameraPreview) findViewById(R.id.camera_preview);
+        mPreview.setCamera(mCamera);
         mIvPersonPhoto = (ImageView) findViewById(R.id.iv_detect_person);
         mTvPersonName = (TextView) findViewById(R.id.tv_detect_name);
         mTvPersonInfo = (TextView) findViewById(R.id.tv_person_info);
-        mIvPlayIntro = (ImageView) findViewById(R.id.iv_play_intro);
-        mTvTip = (TextView) findViewById(R.id.tv_tip);
+        mRlpersonInfo = (PercentRelativeLayout) findViewById(R.id.rl_person_info);
+        originXCoordinate = mRlpersonInfo.getTranslationX();
     }
 
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (mCamera == null) {
+            mCamera = getFrontCamera(ID_FRONT_CAMERA);
+            SurfaceHolder holder = mPreview.getHolder();
+            if (holder != null) {
+                try {
+                    mCamera.setPreviewDisplay(holder);
+                    mCamera.startPreview();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
@@ -228,23 +236,13 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            initIntros();
-            if (Constants.DETECT_USE_LIMIT >= 0) {
+            if (mRlpersonInfo.getVisibility() == View.GONE) {
                 mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
-                Constants.DETECT_USE_LIMIT--;
             } else {
-                Toast.makeText(DetectFaceActivity.this, "使用次数已打上限", Toast.LENGTH_SHORT).show();
+                mRlpersonInfo.setVisibility(View.GONE);
             }
-
         }
     };
-
-    private void initIntros() {
-        mIvPersonPhoto.setVisibility(View.GONE);
-        mTvPersonName.setVisibility(View.GONE);
-        mTvPersonInfo.setVisibility(View.GONE);
-        mIvPlayIntro.setVisibility(View.GONE);
-    }
 
     private Camera.AutoFocusCallback autoFocusCallback = new Camera.AutoFocusCallback() {
         @Override
@@ -266,6 +264,12 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
 
         private FaceDetectTask(byte[] data) {
             this.mData = data;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showProgressDialog("正在识别");
         }
 
         @Override
@@ -333,6 +337,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                 public void onFailure(Call call, IOException e) {
                     LogUtil.e(Constants.TAG_APPLICATION, e.toString());
                     showUIToast("检测人脸失败");
+                    dismissProgressDialog();
                 }
 
                 @Override
@@ -365,7 +370,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                                         mTvPersonName.setText(userId);
                                         mTvPersonName.setVisibility(View.VISIBLE);
                                         mTvPersonInfo.setVisibility(View.VISIBLE);
-                                        mTvTip.setVisibility(View.GONE);
+                                        mRlpersonInfo.setVisibility(View.VISIBLE);
                                         initMediaPlayer();
                                     }
                                 });
@@ -376,27 +381,12 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                             e.printStackTrace();
                         }
                     }
-
+                    dismissProgressDialog();
                 }
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public void control_play(View view) {
-        if (mMediaPlayer.isPlaying()) {
-            mIvPlayIntro.setImageResource(R.drawable.ic_play_intro);
-            mMediaPlayer.pause();
-        } else {
-            mIvPlayIntro.setImageResource(R.drawable.ic_pause_intro);
-            if (isFirstPlay) {
-                mMediaPlayer.prepareAsync();
-            } else {
-                mMediaPlayer.start();
-            }
-        }
-
     }
 
     /** an async thread operation. */
@@ -438,5 +428,23 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
                 Toast.makeText(DetectFaceActivity.this, msg, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void showProgressDialog(String msg) {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setCanceledOnTouchOutside(false);
+            mProgressDialog.setMessage(msg);
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        }
+        mProgressDialog.show();
+    }
+
+    private void dismissProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
     }
 }
