@@ -24,7 +24,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hualubeiyou.faceplusapp.R;
@@ -73,7 +72,6 @@ public class AddNewFaceActivity extends AppCompatActivity {
     private EditText mEtInputName;
     private EditText mEtPersonInfo;
     private ImageView mIvPicture;
-    private TextView mTvPortraitName;
 
     private ImageView mIvRecord;
     private MediaRecorder mRecorder;
@@ -105,7 +103,6 @@ public class AddNewFaceActivity extends AppCompatActivity {
         ImageView mIvCamera = (ImageView) findViewById(R.id.iv_camera);
         ImageView mIvFolder = (ImageView) findViewById(R.id.iv_folder);
         mIvPicture = (ImageView) findViewById(R.id.iv_show);
-        mTvPortraitName = (TextView) findViewById(R.id.tv_portrait_name);
         mBtnUpload = (Button) findViewById(R.id.btn_upload);
         mIvRecord = (ImageView) findViewById(R.id.iv_record);
         setListeners(mIvCamera, mIvFolder);
@@ -296,8 +293,6 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 showLocalImage(data);
             }
             mBtnUpload.setVisibility(View.VISIBLE);
-            mTvPortraitName.setVisibility(View.VISIBLE);
-            mTvPortraitName.setText(mEtInputName.getText());
         }
     }
 
