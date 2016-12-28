@@ -88,4 +88,8 @@ public class MainActivity extends AppCompatActivity {
         ActivityStackManager.getInstance().popAllActivities();
     }
 
+    public void quit(View view) {
+        MainActivity.this.finish();
+    }
+
 }

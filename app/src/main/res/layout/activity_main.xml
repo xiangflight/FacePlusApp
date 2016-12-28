@@ -6,18 +6,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.hualubeiyou.faceplusapp.ui.activity.MainActivity"
-    android:background="@color/color_white">
+    android:background="#000000">
 
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/face_detect_system"
-        android:textColor="@color/base_theme_color"
+        android:textColor="@color/color_white"
         android:textSize="@dimen/sp_24"
         android:textStyle="bold"
         android:layout_centerHorizontal="true"
         app:layout_marginTopPercent="5%"
+        />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        app:layout_marginTopPercent="5%"
+        app:layout_marginEndPercent="5%"
+        android:src="@drawable/ic_quit"
+        android:onClick="quit"
         />
 
     <Button
@@ -28,9 +39,9 @@
         app:layout_heightPercent="40%"
         android:layout_centerVertical="true"
         app:layout_marginStartPercent="12.5%"
-        android:background="@drawable/selector_base_btn"
+        android:background="@drawable/selector_base_btn_1"
         android:text="@string/add_new_face"
-        android:textColor="@color/base_theme_color"
+        android:textColor="@color/color_white"
         android:textSize="@dimen/sp_18"
         android:textStyle="bold"
         />
@@ -44,9 +55,9 @@
         android:layout_centerVertical="true"
         android:layout_toEndOf="@id/btn_base_one"
         app:layout_marginStartPercent="25%"
-        android:background="@drawable/selector_base_btn"
+        android:background="@drawable/selector_base_btn_2"
         android:text="@string/detect_in_real_time"
-        android:textColor="@color/base_theme_color"
+        android:textColor="@color/color_white"
         android:textSize="@dimen/sp_18"
         android:textStyle="bold"
         />

@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.hualubeiyou.faceplusapp.ui.activity.DetectFaceActivity"
-    android:background="@color/color_white"
     android:orientation="horizontal">
 
     <com.hualubeiyou.faceplusapp.ui.views.CameraPreview
@@ -20,10 +19,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="@dimen/sp_24"
-        android:textColor="@color/base_theme_color"
+        android:textColor="#0285DD"
         android:text="@string/face_detect_system"
         android:layout_marginTop="@dimen/dp_24"
         android:layout_gravity="center_horizontal"
+        />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        app:layout_marginTopPercent="3%"
+        app:layout_marginStartPercent="3%"
+        android:src="@drawable/ic_arrow_back"
+        android:onClick="back"
         />
 
     <android.support.percent.PercentRelativeLayout
@@ -33,7 +43,7 @@
         app:layout_widthPercent="32%"
         app:layout_heightPercent="100%"
         android:layout_gravity="right"
-        android:background="@color/color_white"
+        android:background="#0285DD"
         android:visibility="gone">
 
         <ImageView
@@ -53,10 +63,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/iv_detect_person"
             android:layout_centerHorizontal="true"
-            android:text="姓名"
-            android:textSize="@dimen/sp_24"
+            android:textSize="@dimen/sp_20"
             android:textStyle="bold"
-            android:textColor="@color/base_theme_color"
+            android:textColor="@color/color_white"
             app:layout_marginTopPercent="2%"
             />
 
@@ -66,10 +75,11 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/tv_detect_name"
             android:layout_centerHorizontal="true"
-            android:textSize="@dimen/sp_20"
-            android:text="个人介绍"
-            android:textColor="@color/base_theme_color"
+            android:textSize="@dimen/sp_16"
+            android:textColor="@color/color_white"
             app:layout_marginTopPercent="2%"
+            app:layout_marginStartPercent="10%"
+            app:layout_marginEndPercent="10%"
             />
 
 

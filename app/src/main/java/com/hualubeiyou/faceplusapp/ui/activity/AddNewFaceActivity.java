@@ -21,7 +21,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -69,7 +68,8 @@ public class AddNewFaceActivity extends AppCompatActivity {
 
     private static final int REQUEST_FOR_RECORD_AUDIO = 5;
 
-    private Button mBtnUpload;
+    private TextView mTvUpload;
+    private ImageView mIvUpload;
     private EditText mEtInputName;
     private EditText mEtPersonInfo;
     private ImageView mIvPicture;
@@ -105,7 +105,8 @@ public class AddNewFaceActivity extends AppCompatActivity {
         ImageView mIvCamera = (ImageView) findViewById(R.id.iv_camera);
         ImageView mIvFolder = (ImageView) findViewById(R.id.iv_folder);
         mIvPicture = (ImageView) findViewById(R.id.iv_show);
-        mBtnUpload = (Button) findViewById(R.id.btn_upload);
+        mIvUpload = (ImageView) findViewById(R.id.iv_upload);
+        mTvUpload = (TextView) findViewById(R.id.tv_upload);
         mIvRecord = (ImageView) findViewById(R.id.iv_record);
         mTvRecord = (TextView) findViewById(R.id.tv_record);
         setListeners(mIvCamera, mIvFolder);
@@ -297,7 +298,8 @@ public class AddNewFaceActivity extends AppCompatActivity {
             } else if (requestCode == CODE_PICTURES_REQUEST_SRC) {
                 showLocalImage(data);
             }
-            mBtnUpload.setVisibility(View.VISIBLE);
+            mIvUpload.setVisibility(View.VISIBLE);
+            mTvUpload.setVisibility(View.VISIBLE);
         }
     }
 
@@ -428,7 +430,8 @@ public class AddNewFaceActivity extends AppCompatActivity {
     }
 
     private void realUpLoadImage() {
-        mBtnUpload.setText("正在上传");
+        mTvUpload.setText("正在上传");
+        mIvUpload.setClickable(false);
         detectFace();
     }
 
@@ -458,9 +461,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            mBtnUpload.setText("上传");
+                            mTvUpload.setText("点击右侧按钮上传");
                         }
                     });
+                    mIvUpload.setClickable(true);
                 }
 
                 @Override
@@ -472,9 +476,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mBtnUpload.setText("上传");
+                                mTvUpload.setText("点击右侧按钮上传");
                             }
                         });
+                        mIvUpload.setClickable(true);
                     } else {
                         try {
                             JSONObject result = new JSONObject(localResponse);
@@ -486,12 +491,18 @@ public class AddNewFaceActivity extends AppCompatActivity {
                                 setFaceUserId();
                             } else {
                                 showUIToast("没有人脸");
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mTvUpload.setText("点击右侧按钮上传");
+                                    }
+                                });
+                                mIvUpload.setClickable(true);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
-
                 }
             });
         } catch (Exception e) {
@@ -520,9 +531,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mBtnUpload.setText("上传");
+                        mTvUpload.setText("点击右侧按钮上传");
                     }
                 });
+                mIvUpload.setClickable(true);
             }
 
             @Override
@@ -532,9 +544,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            mBtnUpload.setText("上传");
+                            mTvUpload.setText("点击右侧按钮上传");
                         }
                     });
+                    mIvUpload.setClickable(true);
                 } else {
                     LogUtil.i(Constants.TAG_APPLICATION, response.body().string());
                     addFaceToFaceSet();
@@ -567,9 +580,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mBtnUpload.setText("上传");
+                        mTvUpload.setText("点击右侧按钮上传");
                     }
                 });
+                mIvUpload.setClickable(true);
             }
 
             @Override
@@ -595,9 +609,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mBtnUpload.setText("上传");
+                        mTvUpload.setText("点击右侧按钮上传");
                     }
                 });
+                mIvUpload.setClickable(true);
             }
         });
 
@@ -690,6 +705,10 @@ public class AddNewFaceActivity extends AppCompatActivity {
                 Toast.makeText(AddNewFaceActivity.this, msg, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public void back(View view) {
+        AddNewFaceActivity.this.finish();
     }
 
 }

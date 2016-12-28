@@ -447,4 +447,8 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
             mProgressDialog.dismiss();
         }
     }
+
+    public void back(View view) {
+        DetectFaceActivity.this.finish();
+    }
 }

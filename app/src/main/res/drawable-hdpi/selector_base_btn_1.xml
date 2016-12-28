@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <!-- 设置圆角半径 -->
+            <corners
+                android:radius="@dimen/dp_100">
+            </corners>
+            <solid
+                android:color="#018ed4">
+            </solid>
+            <size
+                android:width="@dimen/dp_200"
+                android:height="@dimen/dp_200">
+            </size>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <!-- 设置圆角半径 -->
+            <corners
+                android:radius="@dimen/dp_100">
+            </corners>
+            <solid
+                android:color="#00A1F1">
+            </solid>
+            <size
+                android:width="@dimen/dp_200"
+                android:height="@dimen/dp_200">
+            </size>
+        </shape>
+    </item>
+</selector>

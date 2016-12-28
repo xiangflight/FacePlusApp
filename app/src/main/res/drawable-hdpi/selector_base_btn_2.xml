@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
-        <shape android:shape="rectangle">
+        <shape android:shape="oval">
             <!-- 设置圆角半径 -->
             <corners
-                android:radius="@dimen/dp_4">
+                android:radius="@dimen/dp_100">
             </corners>
             <solid
-                android:color="@color/base_btn_color_default">
+                android:color="#e7804d">
             </solid>
             <size
                 android:width="@dimen/dp_200"
@@ -16,13 +16,13 @@
         </shape>
     </item>
     <item>
-        <shape android:shape="rectangle">
+        <shape android:shape="oval">
             <!-- 设置圆角半径 -->
             <corners
-                android:radius="@dimen/dp_4">
+                android:radius="@dimen/dp_100">
             </corners>
             <solid
-                android:color="@color/base_btn_color_default">
+                android:color="#e79973">
             </solid>
             <size
                 android:width="@dimen/dp_200"

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.hualubeiyou.faceplusapp.ui.activity.AddNewFaceActivity"
-    android:background="@color/color_white"
+    android:background="#0285DD"
     android:focusable="true"
     android:focusableInTouchMode="true">
 
@@ -15,11 +15,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/add_new_face"
-        android:textColor="@color/base_theme_color"
+        android:textColor="@color/color_white"
         android:textSize="@dimen/sp_24"
         android:textStyle="bold"
         android:layout_centerHorizontal="true"
         app:layout_marginTopPercent="5%"
+        />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        app:layout_marginTopPercent="3%"
+        app:layout_marginStartPercent="3%"
+        android:src="@drawable/ic_arrow_back"
+        android:onClick="back"
         />
 
     <EditText
@@ -39,18 +50,6 @@
         app:layout_marginLeftPercent="5%"
         app:layout_marginTopPercent="28%"
         />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        app:layout_heightPercent="4%"
-        android:text="@string/et_hint_warning"
-        android:textColor="@color/color_red"
-        android:textSize="@dimen/sp_12"
-        android:textStyle="bold"
-        android:id="@+id/warning"
-        app:layout_marginTopPercent="40%"
-        android:layout_alignEnd="@id/et_input_name"/>
 
     <ImageView
         android:id="@+id/iv_camera"
@@ -73,19 +72,6 @@
         android:layout_toEndOf="@+id/iv_camera"
         app:layout_marginStartPercent="4%"/>
 
-    <TextView
-        android:id="@+id/tv_person_info"
-        android:layout_below="@id/et_input_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@id/et_input_name"
-        android:text="个人简介"
-        android:textSize="@dimen/sp_16"
-        android:textColor="@color/base_theme_color"
-        android:textStyle="bold"
-        app:layout_marginTopPercent="8%"
-        />
-
     <EditText
         android:id="@+id/et_person_info"
         android:layout_width="0dp"
@@ -102,9 +88,9 @@
         android:maxLength="300"
         android:paddingStart="@dimen/dp_16"
         android:paddingEnd="@dimen/dp_16"
-        android:layout_below="@+id/tv_person_info"
-        android:layout_alignStart="@+id/tv_person_info"
-        app:layout_marginTopPercent="5%"
+        android:layout_below="@id/et_input_name"
+        android:layout_alignStart="@id/et_input_name"
+        app:layout_marginTopPercent="10%"
         />
 
     <TextView
@@ -115,7 +101,7 @@
         android:layout_alignStart="@id/et_input_name"
         android:text="点击右侧按钮录制简介语音"
         android:textSize="@dimen/sp_16"
-        android:textColor="@color/base_theme_color"
+        android:textColor="@color/color_white"
         android:textStyle="bold"
         app:layout_marginTopPercent="5%"
         />
@@ -141,7 +127,7 @@
         app:layout_widthPercent="0.1%"
         app:layout_heightPercent="60%"
         android:contentDescription="@string/separator_line"
-        android:background="@color/base_theme_color"
+        android:background="@color/color_white"
         android:layout_toEndOf="@id/et_person_info"
         app:layout_marginStartPercent="5%"
         app:layout_marginTopPercent="24%"/>
@@ -150,7 +136,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/preview_picture"
-        android:textColor="@color/base_theme_color"
+        android:textColor="@color/color_white"
         android:textSize="@dimen/sp_24"
         android:textStyle="bold"
         android:layout_toEndOf="@id/iv_separator"
@@ -170,21 +156,33 @@
         android:contentDescription="@string/image_show"
         />
 
-    <Button
-        android:id="@+id/btn_upload"
+    <ImageView
+        android:id="@+id/iv_upload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/upload_image"
-        android:textStyle="bold"
-        android:textSize="@dimen/sp_20"
-        android:textColor="@color/base_theme_color"
         android:onClick="uploadImage"
+        android:src="@drawable/ic_upload"
         android:visibility="gone"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         app:layout_marginBottomPercent="10%"
         app:layout_marginEndPercent="10%"
         />
+
+    <TextView
+        android:id="@+id/tv_upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@id/iv_upload"
+        android:layout_alignBottom="@id/iv_upload"
+        android:text="点击右侧按钮上传"
+        android:visibility="gone"
+        android:textSize="@dimen/sp_16"
+        android:textColor="@color/color_white"
+        android:textStyle="bold"
+        app:layout_marginRightPercent="6%"
+        />
+
 
 
 </android.support.percent.PercentRelativeLayout>
