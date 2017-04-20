@@ -21,7 +21,18 @@
         android:textSize="@dimen/sp_24"
         android:textColor="#0285DD"
         android:text="@string/face_detect_system"
-        android:layout_marginTop="@dimen/dp_24"
+        app:layout_marginTopPercent="5%"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/sp_16"
+        android:text="正在检测..."
+        android:textColor="#FF0000"
+        app:layout_marginTopPercent="15%"
         android:layout_gravity="center_horizontal"
         />
 

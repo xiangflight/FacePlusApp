@@ -1,6 +1,5 @@
 package com.hualubeiyou.faceplusapp.ui.activity;
 
-import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +16,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.percent.PercentFrameLayout;
 import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -55,6 +55,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static com.hualubeiyou.faceplusapp.R.id.tv_status;
+
 public class DetectFaceActivity extends AppCompatActivity implements Camera.PreviewCallback{
 
     private Camera mCamera;
@@ -64,16 +66,21 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
 
     private static final int ID_FRONT_CAMERA = 1;
 
+    private TextView mTvDetectStatus;
+
     private ImageView mIvPersonPhoto;
     private TextView mTvPersonName;
     private TextView mTvPersonInfo;
     private PercentRelativeLayout mRlpersonInfo;
-    private float originXCoordinate;
 
     private MediaPlayer mMediaPlayer;
     private boolean isFirstPlay = true;
 
     private ProgressDialog mProgressDialog;
+
+    private boolean mIsPreview;
+
+    private Handler mHandler;
 
 
     @Override
@@ -85,6 +92,9 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         // Create an instance of Camera in a separate thread not to bog down the UI thread.
         mCamera = getFrontCamera(ID_FRONT_CAMERA);
         initView();
+        mIsPreview = true;
+        mHandler = new Handler();
+        mHandler.postDelayed(detectTask, 3000);
     }
 
     private void initMediaPlayer() {
@@ -131,7 +141,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         mTvPersonName = (TextView) findViewById(R.id.tv_detect_name);
         mTvPersonInfo = (TextView) findViewById(R.id.tv_person_info);
         mRlpersonInfo = (PercentRelativeLayout) findViewById(R.id.rl_person_info);
-        originXCoordinate = mRlpersonInfo.getTranslationX();
+        mTvDetectStatus = (TextView) findViewById(R.id.tv_status);
     }
 
 
@@ -157,6 +167,7 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
         super.onPause();
         releaseCameraAndPreview();
         releaseMediaPlayer();
+        mHandler.removeCallbacksAndMessages(null);
         ActivityStackManager.getInstance().popActivity(this);
     }
 
@@ -236,10 +247,12 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (mRlpersonInfo.getVisibility() == View.GONE) {
-                mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+            mIsPreview = ! mIsPreview;
+            if (mIsPreview) {
+                detectTask.run();
+                mTvDetectStatus.setText("正在检测...");
             } else {
-                mRlpersonInfo.setVisibility(View.GONE);
+                mTvDetectStatus.setText("停止检测...");
             }
         }
     };
@@ -451,4 +464,24 @@ public class DetectFaceActivity extends AppCompatActivity implements Camera.Prev
     public void back(View view) {
         DetectFaceActivity.this.finish();
     }
+
+
+
+    private Runnable detectTask = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (null != mCamera && mIsPreview) {
+                    if (mRlpersonInfo.getVisibility() == View.GONE) {
+                        mCamera.setOneShotPreviewCallback(DetectFaceActivity.this);
+                    } else {
+                        mRlpersonInfo.setVisibility(View.GONE);
+                    }
+                    mHandler.postDelayed(detectTask, Constants.DETECT_TIME_DELAY);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
 }

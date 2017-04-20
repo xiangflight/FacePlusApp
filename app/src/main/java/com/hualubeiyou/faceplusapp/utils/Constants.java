@@ -30,6 +30,8 @@ public class Constants {
 
     public static int IMAGE_FILE_UPLIMIT = 2 * 1024 * 1024;
 
+    public static long DETECT_TIME_DELAY = 6000;
+
     //----------------POST REQUEST----------------------------------------------------------
     // FaceSet Create API
     public static final String URL_FACESET_CREATE = "https://api-cn.faceplusplus.com/facepp/v3/faceset/create";
